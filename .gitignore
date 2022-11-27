@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Distribution / packaging
+/build/
+/dist/
+*.egg-info/
+
+# Environment
+/.direnv/
+
+# Sphinx documentation
+/docs/build/
+/docs/autosummary/
+
+# Coverage
+/.coverage
+/coverage.xml

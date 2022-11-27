@@ -1,0 +1,86 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+ci:
+  autofix_commit_msg: "ci(pre-commit): autofix"
+  autoupdate_commit_msg: "ci(pre-commit): autoupdate"
+
+default_install_hook_types:
+  - commit-msg
+  - post-commit
+  - pre-commit
+
+repos:
+  - repo: "https://github.com/pre-commit/pre-commit-hooks"
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-toml
+      - id: name-tests-test
+  - repo: "https://github.com/asottile/setup-cfg-fmt"
+    rev: v2.2.0
+    hooks:
+      - id: setup-cfg-fmt
+        args:
+          - "--min-py3-version=3.8"
+  - repo: "https://github.com/asottile/reorder_python_imports"
+    rev: v3.9.0
+    hooks:
+      - id: reorder-python-imports
+        args:
+          - "--py38-plus"
+  - repo: "https://github.com/asottile/pyupgrade"
+    rev: v3.2.2
+    hooks:
+      - id: pyupgrade
+        args:
+          - "--py38-plus"
+  - repo: "https://github.com/psf/black"
+    rev: 22.10.0
+    hooks:
+      - id: black
+        args:
+          - "--target-version=py38"
+  - repo: "https://github.com/pre-commit/mirrors-mypy"
+    rev: v0.991
+    hooks:
+      - id: mypy
+        args:
+          - "--python-version=3.8"
+          - "--disallow-untyped-defs"
+          - "--disallow-incomplete-defs"
+        additional_dependencies:
+          - pytest
+          - types-setuptools
+  - repo: "https://github.com/PyCQA/flake8"
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+  - repo: "https://github.com/PyCQA/pylint"
+    rev: v2.15.6
+    hooks:
+      - id: pylint
+        additional_dependencies:
+          - pytest
+  - repo: "https://github.com/PyCQA/bandit"
+    rev: 1.7.4
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies:
+          - toml
+  - repo: "https://github.com/PyCQA/pydocstyle"
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        args:
+          - "--convention=numpy"
+          - "--explain"
+          - "--source"
+        additional_dependencies:
+          - toml
+  - repo: "https://github.com/commitizen-tools/commitizen"
+    rev: v2.37.0
+    hooks:
+      - id: commitizen
+        stages: [post-commit]
