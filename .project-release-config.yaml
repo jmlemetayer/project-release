@@ -1,0 +1,23 @@
+# See https://project-release.readthedocs.io for more information
+convention:
+  version: pep440
+
+file:
+  version:
+    path: src/project_release/__init__.py
+    pattern: '(?<=__version__ = ").*(?=")'
+
+git:
+  branch:
+    development: main
+    release: main
+
+  commit:
+    message: 'bump: version %(version)s'
+    gpg-sign: true
+
+  tag:
+    format: 'v%(version)s'
+    message: 'version %(version)s'
+    annotate: true
+    gpg-sign: true
