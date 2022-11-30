@@ -8,6 +8,10 @@ import semver
 logger = logging.getLogger(__name__)
 
 
+class InvalidVersionError(Exception):
+    """Invalid version string."""
+
+
 class VersionConvention(abc.ABC):  # pylint: disable=too-few-public-methods
     """An abstract class to handle a version convention."""
 
@@ -24,6 +28,11 @@ class VersionConvention(abc.ABC):  # pylint: disable=too-few-public-methods
         -------
         bool
             Is the provided version string valid?
+
+        Raises
+        ------
+        InvalidVersionError
+            If the version string is invalid.
         """
         raise NotImplementedError
 
@@ -48,9 +57,10 @@ class SemverConvention(VersionConvention):  # pylint: disable=too-few-public-met
         try:
             semver.VersionInfo.parse(version)
             return True
-        except ValueError:
-            logger.error("Invalid semver version string: '%s'", version)
-            return False
+        except ValueError as err:
+            raise InvalidVersionError(
+                f"Invalid semver version string: '{version}'"
+            ) from err
 
 
 class Pep440Convention(VersionConvention):  # pylint: disable=too-few-public-methods
@@ -71,6 +81,5 @@ class Pep440Convention(VersionConvention):  # pylint: disable=too-few-public-met
         VersionConvention.is_valid
         """
         if not pep440.is_canonical(version):
-            logger.error("Invalid pep440 version string: '%s'", version)
-            return False
+            raise InvalidVersionError(f"Invalid pep440 version string: '{version}'")
         return True

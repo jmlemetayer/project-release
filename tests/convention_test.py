@@ -1,6 +1,12 @@
 """Test cases for the convention module."""
+import logging
+
+import pytest
+from project_release.convention import InvalidVersionError
 from project_release.convention import Pep440Convention
 from project_release.convention import SemverConvention
+
+logger = logging.getLogger(__name__)
 
 
 class TestSemverConvention:
@@ -12,7 +18,8 @@ class TestSemverConvention:
 
     def test_invalid(self) -> None:
         """Test that an invalid version is invalid."""
-        assert not SemverConvention().is_valid("1.2.3.dev1")
+        with pytest.raises(InvalidVersionError):
+            SemverConvention().is_valid("1.2.3.dev1")
 
 
 class TestPep440Convention:
@@ -24,4 +31,5 @@ class TestPep440Convention:
 
     def test_invalid(self) -> None:
         """Test that an invalid version is invalid."""
-        assert not Pep440Convention().is_valid("1.2.3+devel")
+        with pytest.raises(InvalidVersionError):
+            Pep440Convention().is_valid("1.2.3+devel")
