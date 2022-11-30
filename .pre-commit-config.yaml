@@ -50,8 +50,9 @@ repos:
           - "--disallow-untyped-defs"
           - "--disallow-incomplete-defs"
         additional_dependencies:
-          - pep440
+          - pep440~=0.1.2
           - pytest
+          - semver~=2.13.0
           - types-setuptools
   - repo: "https://github.com/PyCQA/flake8"
     rev: 6.0.0
@@ -62,9 +63,9 @@ repos:
     hooks:
       - id: pylint
         additional_dependencies:
-          - pep440
+          - pep440~=0.1.2
           - pytest
-          - semver
+          - semver~=2.13.0
   - repo: "https://github.com/PyCQA/bandit"
     rev: 1.7.4
     hooks:
