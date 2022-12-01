@@ -53,6 +53,7 @@ repos:
           - pep440~=0.1.2
           - pytest
           - semver~=2.13.0
+          - types-pyyaml
           - types-setuptools
   - repo: "https://github.com/PyCQA/flake8"
     rev: 6.0.0
@@ -65,6 +66,7 @@ repos:
         additional_dependencies:
           - pep440~=0.1.2
           - pytest
+          - pyyaml~=6.0
           - semver~=2.13.0
   - repo: "https://github.com/PyCQA/bandit"
     rev: 1.7.4
