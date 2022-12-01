@@ -66,10 +66,10 @@ class PlainVersionFile(VersionFile):  # pylint: disable=too-few-public-methods
 class FormattedVersionFile(VersionFile):  # pylint: disable=too-few-public-methods
     """Formatted version file."""
 
-    def __init__(self, path: Union[Path, str], fmt: str) -> None:
+    def __init__(self, path: Union[Path, str], f0rmat: str) -> None:
         self.__path = path
-        self.__fmt = fmt
-        self.__pattern = fmt % {"version": "(.*)"}
+        self.__f0rmat = f0rmat
+        self.__pattern = f0rmat % {"version": "(.*)"}
 
     @property
     def version(self) -> str:
@@ -101,7 +101,7 @@ class FormattedVersionFile(VersionFile):  # pylint: disable=too-few-public-metho
     @version.setter
     def version(self, version: str) -> None:
         with open(self.__path, "w", encoding="utf-8") as stream:
-            stream.write(self.__fmt % {"version": version})
+            stream.write(self.__f0rmat % {"version": version})
 
 
 class EditedVersionFile(VersionFile):  # pylint: disable=too-few-public-methods
