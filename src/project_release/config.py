@@ -2,6 +2,7 @@
 import logging
 from pathlib import Path
 from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
@@ -41,7 +42,7 @@ class Config:  # pylint: disable=too-few-public-methods
         self.convention = ConventionConfig()
         self.file = FileConfig()
 
-    def __parse_convention(self, data: Any) -> None:
+    def __parse_convention(self, data: Dict) -> None:
         """Parse the 'convention' dictionary."""
         convention = data.get("convention")
         if convention is None:
@@ -52,8 +53,10 @@ class Config:  # pylint: disable=too-few-public-methods
             return
 
         if version == "semver":
+            logger.debug("Version convention is: '%s'", version)
             self.convention.version = SemverConvention()
         elif version == "pep440":
+            logger.debug("Version convention is: '%s'", version)
             self.convention.version = Pep440Convention()
         else:
             raise ValueError("Invalid value in 'convention.version'")
@@ -61,6 +64,7 @@ class Config:  # pylint: disable=too-few-public-methods
     def __parse_file_version_item(self, data: Any) -> None:
         """Parse the 'file.version' item."""
         if isinstance(data, str):
+            logger.debug("Registered version file: '%s'", data)
             return self.file.version.append(PlainVersionFile(data))
 
         if not isinstance(data, dict):
@@ -77,18 +81,23 @@ class Config:  # pylint: disable=too-few-public-methods
             raise TypeError("Invalid 'path' type in 'file.version'")
 
         if f0rmat is None and pattern is None:
+            logger.debug("Registered version file: '%s'", path)
             return self.file.version.append(PlainVersionFile(path))
         if f0rmat is not None and pattern is None:
             if not isinstance(f0rmat, str):
                 raise TypeError("Invalid 'format' type in 'file.version'")
+            logger.debug("Registered version file: '%s' with format '%s'", path, f0rmat)
             return self.file.version.append(FormattedVersionFile(path, f0rmat))
         if f0rmat is None and pattern is not None:
             if not isinstance(pattern, str):
                 raise TypeError("Invalid 'pattern' type in 'file.version'")
+            logger.debug(
+                "Registered version file: '%s' with pattern '%s'", path, pattern
+            )
             return self.file.version.append(EditedVersionFile(path, pattern))
         raise ValueError("Both existing 'format' and 'pattern' in 'file.version'")
 
-    def __parse_file(self, data: Any) -> None:
+    def __parse_file(self, data: Dict) -> None:
         """Parse the 'file' dictionary."""
         file = data.get("file")
         if file is None:
@@ -116,7 +125,12 @@ class Config:  # pylint: disable=too-few-public-methods
         TypeError
             If the type of a value is invalid.
         """
+        logger.debug("Opening configuration file: '%s'", self.__path)
         with open(self.__path, encoding="utf-8") as stream:
             data = yaml.safe_load(stream)
+        if data is None:
+            data = {}
+        elif not isinstance(data, dict):
+            raise TypeError("Invalid yaml document type")
         self.__parse_convention(data)
         self.__parse_file(data)
