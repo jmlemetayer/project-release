@@ -30,7 +30,7 @@ repos:
         args:
           - "--py38-plus"
   - repo: "https://github.com/asottile/pyupgrade"
-    rev: v3.2.2
+    rev: v3.3.0
     hooks:
       - id: pyupgrade
         args:
@@ -60,7 +60,7 @@ repos:
     hooks:
       - id: flake8
   - repo: "https://github.com/PyCQA/pylint"
-    rev: v2.15.6
+    rev: v2.15.8
     hooks:
       - id: pylint
         additional_dependencies:
@@ -86,7 +86,7 @@ repos:
         additional_dependencies:
           - toml
   - repo: "https://github.com/commitizen-tools/commitizen"
-    rev: v2.37.0
+    rev: v2.37.1
     hooks:
       - id: commitizen
         stages: [post-commit]
