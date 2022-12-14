@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import schema
 import yaml
 from project_release.config import Config
 from project_release.convention import Pep440Convention
@@ -31,14 +32,14 @@ class TestConventionConfig(TestConfig):
 
     def test_no_convention(self, tmp_path: Path) -> None:
         """Test that a config without 'convention' is valid."""
-        path = self.write_yaml(tmp_path, {"convention": None})
+        path = self.write_yaml(tmp_path, {})
         config = Config(path)
         config.parse()
         assert config.convention.version is None
 
     def test_no_version(self, tmp_path: Path) -> None:
         """Test that a config without 'version' is valid."""
-        path = self.write_yaml(tmp_path, {"convention": {"version": None}})
+        path = self.write_yaml(tmp_path, {"convention": {}})
         config = Config(path)
         config.parse()
         assert config.convention.version is None
@@ -61,7 +62,7 @@ class TestConventionConfig(TestConfig):
         """Test that a config with 'version=invalid' is invalid."""
         path = self.write_yaml(tmp_path, {"convention": {"version": "invalid"}})
         config = Config(path)
-        with pytest.raises(ValueError):
+        with pytest.raises(schema.SchemaError):
             config.parse()
 
 
@@ -70,14 +71,14 @@ class TestFileConfig(TestConfig):
 
     def test_no_file(self, tmp_path: Path) -> None:
         """Test that a config without 'file' is valid."""
-        path = self.write_yaml(tmp_path, {"file": None})
+        path = self.write_yaml(tmp_path, {})
         config = Config(path)
         config.parse()
         assert not config.file.version
 
     def test_no_version(self, tmp_path: Path) -> None:
         """Test that a config without 'version' is valid."""
-        path = self.write_yaml(tmp_path, {"file": {"version": None}})
+        path = self.write_yaml(tmp_path, {"file": {}})
         config = Config(path)
         config.parse()
         assert not config.file.version
@@ -94,21 +95,21 @@ class TestFileConfig(TestConfig):
         """Test that a config with 'version' not as 'dict' is invalid."""
         path = self.write_yaml(tmp_path, {"file": {"version": 1234}})
         config = Config(path)
-        with pytest.raises(TypeError):
+        with pytest.raises(schema.SchemaError):
             config.parse()
 
     def test_version_no_path(self, tmp_path: Path) -> None:
         """Test that a config without 'path' is invalid."""
-        path = self.write_yaml(tmp_path, {"file": {"version": {"path": None}}})
+        path = self.write_yaml(tmp_path, {"file": {"version": {}}})
         config = Config(path)
-        with pytest.raises(ValueError):
+        with pytest.raises(schema.SchemaError):
             config.parse()
 
     def test_version_path_not_str(self, tmp_path: Path) -> None:
         """Test that a config with 'path' not as 'str' is invalid."""
         path = self.write_yaml(tmp_path, {"file": {"version": {"path": 1234}}})
         config = Config(path)
-        with pytest.raises(TypeError):
+        with pytest.raises(schema.SchemaError):
             config.parse()
 
     def test_version_path(self, tmp_path: Path) -> None:
@@ -125,7 +126,7 @@ class TestFileConfig(TestConfig):
             tmp_path, {"file": {"version": {"path": "path", "format": 1234}}}
         )
         config = Config(path)
-        with pytest.raises(TypeError):
+        with pytest.raises(schema.SchemaError):
             config.parse()
 
     def test_version_format(self, tmp_path: Path) -> None:
@@ -144,7 +145,7 @@ class TestFileConfig(TestConfig):
             tmp_path, {"file": {"version": {"path": "path", "pattern": 1234}}}
         )
         config = Config(path)
-        with pytest.raises(TypeError):
+        with pytest.raises(schema.SchemaError):
             config.parse()
 
     def test_version_pattern(self, tmp_path: Path) -> None:
@@ -172,7 +173,7 @@ class TestFileConfig(TestConfig):
             },
         )
         config = Config(path)
-        with pytest.raises(ValueError):
+        with pytest.raises(schema.SchemaError):
             config.parse()
 
     def test_version_list(self, tmp_path: Path) -> None:
