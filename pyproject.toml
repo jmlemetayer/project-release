@@ -6,10 +6,10 @@ build-backend = "setuptools.build_meta"
 module = ["semver"]
 ignore_missing_imports = true
 
+[tool.bandit.assert_used]
+skips =  ["*_test.py"]
+
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(levelname)8s %(message)s"
-
-[tool.bandit.assert_used]
-skips =  ["*_test.py"]
