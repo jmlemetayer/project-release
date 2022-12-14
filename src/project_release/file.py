@@ -21,7 +21,7 @@ class InconsistentVersionError(Exception):
     """Multiple inconsistent versions has been found."""
 
 
-class VersionFile(ABC):  # pylint: disable=too-few-public-methods
+class VersionFile(ABC):
     """An abstract class to handle a version file."""
 
     @property
@@ -36,7 +36,7 @@ class VersionFile(ABC):  # pylint: disable=too-few-public-methods
         raise NotImplementedError
 
 
-class PlainVersionFile(VersionFile):  # pylint: disable=too-few-public-methods
+class PlainVersionFile(VersionFile):
     """Plain version file."""
 
     def __init__(self, path: Union[Path, str]) -> None:
@@ -63,7 +63,7 @@ class PlainVersionFile(VersionFile):  # pylint: disable=too-few-public-methods
             stream.write(version)
 
 
-class FormattedVersionFile(VersionFile):  # pylint: disable=too-few-public-methods
+class FormattedVersionFile(VersionFile):
     """Formatted version file."""
 
     def __init__(self, path: Union[Path, str], f0rmat: str) -> None:
@@ -104,7 +104,7 @@ class FormattedVersionFile(VersionFile):  # pylint: disable=too-few-public-metho
             stream.write(self.__f0rmat % {"version": version})
 
 
-class EditedVersionFile(VersionFile):  # pylint: disable=too-few-public-methods
+class EditedVersionFile(VersionFile):
     """Edited version file."""
 
     def __init__(self, path: Union[Path, str], pattern: str) -> None:

@@ -19,21 +19,21 @@ from .file import VersionFile
 logger = logging.getLogger(__name__)
 
 
-class ConventionConfig:  # pylint: disable=too-few-public-methods
+class ConventionConfig:
     """A class to handle the convention config."""
 
     def __init__(self) -> None:
         self.version: Optional[VersionConvention] = None
 
 
-class FileConfig:  # pylint: disable=too-few-public-methods
+class FileConfig:
     """A class to handle the file config."""
 
     def __init__(self) -> None:
         self.version: List[VersionFile] = []
 
 
-class Config:  # pylint: disable=too-few-public-methods
+class Config:
     """A class to handle the config file."""
 
     def __init__(self, path: Union[Path, str]) -> None:
