@@ -12,7 +12,7 @@ class InvalidVersionError(Exception):
     """Invalid version string."""
 
 
-class VersionConvention(abc.ABC):  # pylint: disable=too-few-public-methods
+class VersionConvention(abc.ABC):
     """An abstract class to handle a version convention."""
 
     @abc.abstractmethod
@@ -37,7 +37,7 @@ class VersionConvention(abc.ABC):  # pylint: disable=too-few-public-methods
         raise NotImplementedError
 
 
-class SemverConvention(VersionConvention):  # pylint: disable=too-few-public-methods
+class SemverConvention(VersionConvention):
     """Semantic Versioning version convention.
 
     Notes
@@ -63,7 +63,7 @@ class SemverConvention(VersionConvention):  # pylint: disable=too-few-public-met
             ) from err
 
 
-class Pep440Convention(VersionConvention):  # pylint: disable=too-few-public-methods
+class Pep440Convention(VersionConvention):
     """PEP 440 version convention.
 
     Notes
