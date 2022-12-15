@@ -7,9 +7,9 @@ Welcome to the project_release package documentation
    :target: https://project-release.readthedocs.io/en/latest
 .. image:: https://img.shields.io/github/license/jmlemetayer/project-release
    :target: https://github.com/jmlemetayer/project-release/blob/main/LICENSE.md
-.. image:: https://img.shields.io/github/workflow/status/jmlemetayer/project-release/Build%20python%20package%20and%20publish%20to%20TestPyPI%20and%20PyPI/main
+.. image:: https://img.shields.io/github/actions/workflow/status/jmlemetayer/project-release/build-and-publish.yml?branch=main
    :target: https://github.com/jmlemetayer/project-release/actions
-.. image:: https://img.shields.io/github/workflow/status/jmlemetayer/project-release/Run%20pytest%20and%20publish%20coverage%20to%20Codecov/main?label=test
+.. image:: https://img.shields.io/github/actions/workflow/status/jmlemetayer/project-release/pytest-and-coverage.yml?branch=main&label=test
    :target: https://github.com/jmlemetayer/project-release/actions
 .. image:: https://results.pre-commit.ci/badge/github/jmlemetayer/project-release/main.svg
    :target: https://results.pre-commit.ci/latest/github/jmlemetayer/project-release/main

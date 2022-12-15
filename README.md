@@ -33,9 +33,9 @@ The `project-release` project is released under the [MIT License][license-link].
 [documentation-link]: https://project-release.readthedocs.io/en/latest
 [license-badge]: https://img.shields.io/github/license/jmlemetayer/project-release
 [license-link]: https://github.com/jmlemetayer/project-release/blob/main/LICENSE.md
-[build-badge]: https://img.shields.io/github/workflow/status/jmlemetayer/project-release/Build%20python%20package%20and%20publish%20to%20TestPyPI%20and%20PyPI/main
+[build-badge]: https://img.shields.io/github/actions/workflow/status/jmlemetayer/project-release/build-and-publish.yml?branch=main
 [build-link]: https://github.com/jmlemetayer/project-release/actions
-[test-badge]: https://img.shields.io/github/workflow/status/jmlemetayer/project-release/Run%20pytest%20and%20publish%20coverage%20to%20Codecov/main?label=test
+[test-badge]: https://img.shields.io/github/actions/workflow/status/jmlemetayer/project-release/pytest-and-coverage.yml?branch=main&label=test
 [test-link]: https://github.com/jmlemetayer/project-release/actions
 [pre-commit-badge]: https://results.pre-commit.ci/badge/github/jmlemetayer/project-release/main.svg
 [pre-commit-link]: https://results.pre-commit.ci/latest/github/jmlemetayer/project-release/main
