@@ -60,7 +60,7 @@ repos:
     hooks:
       - id: flake8
   - repo: "https://github.com/PyCQA/pylint"
-    rev: v2.16.0b0
+    rev: v2.16.0b1
     hooks:
       - id: pylint
         additional_dependencies:
@@ -77,7 +77,7 @@ repos:
         additional_dependencies:
           - toml
   - repo: "https://github.com/PyCQA/pydocstyle"
-    rev: 6.2.3
+    rev: 6.3.0
     hooks:
       - id: pydocstyle
         args:
@@ -87,7 +87,7 @@ repos:
         additional_dependencies:
           - toml
   - repo: "https://github.com/commitizen-tools/commitizen"
-    rev: v2.39.1
+    rev: v2.40.0
     hooks:
       - id: commitizen
         stages: [post-commit]
