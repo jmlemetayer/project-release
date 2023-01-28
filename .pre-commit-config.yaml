@@ -50,6 +50,7 @@ repos:
           - "--disallow-untyped-defs"
           - "--disallow-incomplete-defs"
         additional_dependencies:
+          - gitpython~=3.1.30
           - pep440~=0.1.2
           - pytest
           - semver~=2.13.0
@@ -64,6 +65,7 @@ repos:
     hooks:
       - id: pylint
         additional_dependencies:
+          - gitpython~=3.1.30
           - pep440~=0.1.2
           - pytest
           - pyyaml~=6.0
