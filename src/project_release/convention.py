@@ -37,6 +37,19 @@ class VersionConvention(abc.ABC):
         raise NotImplementedError
 
 
+class AcceptAllConvention(VersionConvention):
+    """Version convention that accept all."""
+
+    def is_valid(self, _version: str) -> bool:
+        """Accept all version string.
+
+        See Also
+        --------
+        VersionConvention.is_valid
+        """
+        return True
+
+
 class SemverConvention(VersionConvention):
     """Semantic Versioning version convention.
 
