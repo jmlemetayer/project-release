@@ -1,4 +1,4 @@
-"""Conventions related code."""
+"""Validations related code."""
 import abc
 import logging
 
@@ -12,11 +12,11 @@ class InvalidVersionError(Exception):
     """Invalid version string."""
 
 
-class VersionConvention(abc.ABC):
-    """An abstract class to handle a version convention."""
+class VersionValidator(abc.ABC):
+    """An abstract class to handle a version validator."""
 
     @abc.abstractmethod
-    def is_valid(self, version: str) -> bool:
+    def validate(self, version: str) -> bool:
         """Validate a version string.
 
         Parameters
@@ -37,21 +37,21 @@ class VersionConvention(abc.ABC):
         raise NotImplementedError
 
 
-class AcceptAllConvention(VersionConvention):
-    """Version convention that accept all."""
+class AcceptAllValidator(VersionValidator):
+    """Version validator that accept all."""
 
-    def is_valid(self, _version: str) -> bool:
+    def validate(self, _version: str) -> bool:
         """Accept all version string.
 
         See Also
         --------
-        VersionConvention.is_valid
+        VersionValidator.validate
         """
         return True
 
 
-class SemverConvention(VersionConvention):
-    """Semantic Versioning version convention.
+class SemverValidator(VersionValidator):
+    """Semantic Versioning version validator.
 
     Notes
     -----
@@ -60,12 +60,12 @@ class SemverConvention(VersionConvention):
     .. _Semantic Versioning: https://semver.org
     """
 
-    def is_valid(self, version: str) -> bool:
+    def validate(self, version: str) -> bool:
         """Validate a semver version string.
 
         See Also
         --------
-        VersionConvention.is_valid
+        VersionValidator.validate
         """
         try:
             semver.VersionInfo.parse(version)
@@ -76,8 +76,8 @@ class SemverConvention(VersionConvention):
             ) from err
 
 
-class Pep440Convention(VersionConvention):
-    """PEP 440 version convention.
+class Pep440Validator(VersionValidator):
+    """PEP 440 version validator.
 
     Notes
     -----
@@ -86,12 +86,12 @@ class Pep440Convention(VersionConvention):
     .. _PEP 440: https://peps.python.org/pep-0440/
     """
 
-    def is_valid(self, version: str) -> bool:
+    def validate(self, version: str) -> bool:
         """Validate a pep440 version string.
 
         See Also
         --------
-        VersionConvention.is_valid
+        VersionValidator.validate
         """
         if not pep440.is_canonical(version):
             raise InvalidVersionError(f"Invalid pep440 version string: '{version}'")

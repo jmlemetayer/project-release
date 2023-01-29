@@ -9,20 +9,20 @@ from typing import Union
 import schema
 import yaml
 
-from .convention import Pep440Convention
-from .convention import SemverConvention
-from .convention import VersionConvention
 from .file import EditedVersionFile
 from .file import FormattedVersionFile
 from .file import PlainVersionFile
 from .file import VersionFile
+from .validation import Pep440Validator
+from .validation import SemverValidator
+from .validation import VersionValidator
 
 logger = logging.getLogger(__name__)
 
 
-class _ConventionConfig:
+class _ValidationConfig:
     def __init__(self) -> None:
-        self.version: Optional[VersionConvention] = None
+        self.version: Optional[VersionValidator] = None
 
 
 class _FileConfig:
@@ -33,12 +33,12 @@ class _FileConfig:
 class Config:
     """A class to handle the config file."""
 
-    __CONVENTION_VERSION_SCHEMA = schema.Schema(
+    __VALIDATION_VERSION_SCHEMA = schema.Schema(
         schema.And(str, schema.Use(str.lower), lambda s: s in ("semver", "pep440"))
     )
 
-    __CONVENTION_SCHEMA = schema.Schema(
-        {schema.Optional("version"): __CONVENTION_VERSION_SCHEMA}
+    __VALIDATION_SCHEMA = schema.Schema(
+        {schema.Optional("version"): __VALIDATION_VERSION_SCHEMA}
     )
 
     __FILE_VERSION_PLAIN_SCHEMA = schema.Schema(
@@ -73,25 +73,25 @@ class Config:
 
     __SCHEMA = schema.Schema(
         {
-            schema.Optional("convention"): __CONVENTION_SCHEMA,
+            schema.Optional("validation"): __VALIDATION_SCHEMA,
             schema.Optional("file"): __FILE_SCHEMA,
         }
     )
 
     def __init__(self, path: Union[Path, str]) -> None:
         self.__path = path
-        self.convention = _ConventionConfig()
+        self.validation = _ValidationConfig()
         self.file = _FileConfig()
 
-    def __parse_convention(self, data: Any) -> None:
-        """Parse the 'convention' dictionary."""
-        convention = data.get("convention")
-        if convention is not None:
-            version = convention.get("version")
+    def __parse_validation(self, data: Any) -> None:
+        """Parse the 'validation' dictionary."""
+        validation = data.get("validation")
+        if validation is not None:
+            version = validation.get("version")
             if version == "semver":
-                self.convention.version = SemverConvention()
+                self.validation.version = SemverValidator()
             elif version == "pep440":
-                self.convention.version = Pep440Convention()
+                self.validation.version = Pep440Validator()
 
     def __parse_file_version_item(self, data: Any) -> None:
         """Parse the 'file.version' item."""
@@ -133,5 +133,5 @@ class Config:
         with open(self.__path, encoding="utf-8") as stream:
             data = yaml.safe_load(stream)
         validated = self.__SCHEMA.validate(data)
-        self.__parse_convention(validated)
+        self.__parse_validation(validated)
         self.__parse_file(validated)

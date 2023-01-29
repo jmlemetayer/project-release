@@ -3,7 +3,7 @@ Configuration
 
 The file ``.project-release-config.yaml`` is used for the configuration.
 
-Conventions
+Validations
 -----------
 
 The project can indicate that it follows certain conventions.
@@ -20,7 +20,7 @@ The version string can be limited to some standards:
 
 .. code-block:: yaml
 
-    convention:
+    validation:
       version: semver
 
 When not defined, the user-specified version string is unrestricted.

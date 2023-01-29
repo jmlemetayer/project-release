@@ -1,5 +1,5 @@
 # See https://project-release.readthedocs.io for more information
-convention:
+validation:
   version: pep440
 
 file:
