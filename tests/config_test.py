@@ -7,8 +7,8 @@ import pytest
 import schema
 import yaml
 from project_release.config import Config
-from project_release.convention import Pep440Convention
-from project_release.convention import SemverConvention
+from project_release.convention import Pep440Validator
+from project_release.convention import SemverValidator
 from project_release.file import EditedVersionFile
 from project_release.file import FormattedVersionFile
 from project_release.file import PlainVersionFile
@@ -49,14 +49,14 @@ class TestConventionConfig(TestConfig):
         path = self.write_yaml(tmp_path, {"convention": {"version": "semver"}})
         config = Config(path)
         config.parse()
-        assert isinstance(config.convention.version, SemverConvention)
+        assert isinstance(config.convention.version, SemverValidator)
 
     def test_version_pep440(self, tmp_path: Path) -> None:
         """Test that a config with 'version=pep440' is valid."""
         path = self.write_yaml(tmp_path, {"convention": {"version": "pep440"}})
         config = Config(path)
         config.parse()
-        assert isinstance(config.convention.version, Pep440Convention)
+        assert isinstance(config.convention.version, Pep440Validator)
 
     def test_version_invalid(self, tmp_path: Path) -> None:
         """Test that a config with 'version=invalid' is invalid."""

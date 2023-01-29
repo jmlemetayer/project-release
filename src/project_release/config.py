@@ -9,9 +9,9 @@ from typing import Union
 import schema
 import yaml
 
-from .convention import Pep440Convention
-from .convention import SemverConvention
-from .convention import VersionConvention
+from .convention import Pep440Validator
+from .convention import SemverValidator
+from .convention import VersionValidator
 from .file import EditedVersionFile
 from .file import FormattedVersionFile
 from .file import PlainVersionFile
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class _ConventionConfig:
     def __init__(self) -> None:
-        self.version: Optional[VersionConvention] = None
+        self.version: Optional[VersionValidator] = None
 
 
 class _FileConfig:
@@ -89,9 +89,9 @@ class Config:
         if convention is not None:
             version = convention.get("version")
             if version == "semver":
-                self.convention.version = SemverConvention()
+                self.convention.version = SemverValidator()
             elif version == "pep440":
-                self.convention.version = Pep440Convention()
+                self.convention.version = Pep440Validator()
 
     def __parse_file_version_item(self, data: Any) -> None:
         """Parse the 'file.version' item."""
