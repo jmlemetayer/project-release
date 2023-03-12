@@ -3,8 +3,10 @@ import argparse
 import logging
 import pathlib
 import sys
+from typing import Callable
 from typing import List
 from typing import Optional
+from typing import Union
 
 import git
 import questionary
@@ -19,10 +21,16 @@ logger = logging.getLogger(__name__)
 CONFIG_FILE = ".project-release-config.yaml"
 
 
-def _get_version(version: Optional[str]) -> str:
-    if version is None:
-        return questionary.text("Specify the desired version string").unsafe_ask()
-    return version
+def _get_version(
+    version: Optional[str], validate: Callable[[str], Union[bool, str]]
+) -> str:
+    if version is not None:
+        if validate(version) is not True:
+            sys.exit(validate(version))
+        return version
+    return questionary.text(
+        "Specify the desired version string", validate=validate
+    ).unsafe_ask()
 
 
 def project_release_cli(argv: Optional[List[str]] = None) -> int:
@@ -95,7 +103,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         sys.exit(f"The configuration file is not valid: {exc}")
 
     try:
-        version = _get_version(args.VERSION)
+        version = _get_version(args.VERSION, config["version_validator"].validate)
     except KeyboardInterrupt:
         sys.exit("Cancelled by user")
 
