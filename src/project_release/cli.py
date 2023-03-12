@@ -8,8 +8,11 @@ from typing import Optional
 
 import git
 import questionary
+import schema
+import yaml
 
 from . import __version__
+from .config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +80,19 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
 
     if not config_file.is_file():
         sys.exit("The configuration file is not a regular file")
+
+    config = Config(config_file)
+
+    try:
+        config.parse()
+    except yaml.YAMLError as exc:
+        desc = ""
+        if hasattr(exc, "problem_mark"):
+            mark = exc.problem_mark
+            desc = f": syntax error at line {mark.line + 1}, column {mark.column + 1}"
+        sys.exit(f"The configuration file is not a valid yaml file{desc}")
+    except schema.SchemaError as exc:
+        sys.exit(f"The configuration file is not valid: {exc}")
 
     try:
         version = _get_version(args.VERSION)
