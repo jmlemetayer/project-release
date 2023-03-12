@@ -1,6 +1,7 @@
 """Validations related code."""
 import abc
 import logging
+from typing import Union
 
 import pep440
 import semver
@@ -8,15 +9,11 @@ import semver
 logger = logging.getLogger(__name__)
 
 
-class InvalidVersionError(Exception):
-    """Invalid version string."""
-
-
 class VersionValidator(abc.ABC):
     """An abstract class to handle a version validator."""
 
     @abc.abstractmethod
-    def validate(self, version: str) -> bool:
+    def validate(self, version: str) -> Union[bool, str]:
         """Validate a version string.
 
         Parameters
@@ -28,11 +25,8 @@ class VersionValidator(abc.ABC):
         -------
         bool
             Is the provided version string valid?
-
-        Raises
-        ------
-        InvalidVersionError
-            If the version string is invalid.
+        str
+            Reason why the version string is not valid.
         """
         raise NotImplementedError
 
@@ -40,7 +34,7 @@ class VersionValidator(abc.ABC):
 class AcceptAllValidator(VersionValidator):
     """Version validator that accept all."""
 
-    def validate(self, _version: str) -> bool:
+    def validate(self, _version: str) -> Union[bool, str]:
         """Accept all version string.
 
         See Also
@@ -60,7 +54,7 @@ class SemverValidator(VersionValidator):
     .. _Semantic Versioning: https://semver.org
     """
 
-    def validate(self, version: str) -> bool:
+    def validate(self, version: str) -> Union[bool, str]:
         """Validate a semver version string.
 
         See Also
@@ -70,10 +64,8 @@ class SemverValidator(VersionValidator):
         try:
             semver.VersionInfo.parse(version)
             return True
-        except ValueError as err:
-            raise InvalidVersionError(
-                f"Invalid semver version string: '{version}'"
-            ) from err
+        except ValueError:
+            return f"Invalid semver version string: '{version}'"
 
 
 class Pep440Validator(VersionValidator):
@@ -86,7 +78,7 @@ class Pep440Validator(VersionValidator):
     .. _PEP 440: https://peps.python.org/pep-0440/
     """
 
-    def validate(self, version: str) -> bool:
+    def validate(self, version: str) -> Union[bool, str]:
         """Validate a pep440 version string.
 
         See Also
@@ -94,5 +86,5 @@ class Pep440Validator(VersionValidator):
         VersionValidator.validate
         """
         if not pep440.is_canonical(version):
-            raise InvalidVersionError(f"Invalid pep440 version string: '{version}'")
+            return f"Invalid pep440 version string: '{version}'"
         return True
