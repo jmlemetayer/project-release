@@ -7,12 +7,19 @@ from typing import List
 from typing import Optional
 
 import git
+import questionary
 
 from . import __version__
 
 logger = logging.getLogger(__name__)
 
 CONFIG_FILE = ".project-release-config.yaml"
+
+
+def _get_version(version: Optional[str]) -> str:
+    if version is None:
+        return questionary.text("Specify the desired version string").unsafe_ask()
+    return version
 
 
 def project_release_cli(argv: Optional[List[str]] = None) -> int:
@@ -36,6 +43,8 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug logs")
+
+    parser.add_argument("VERSION", nargs="?", help="desired version string")
 
     parser.add_argument(
         "-c",
@@ -68,5 +77,12 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
 
     if not config_file.is_file():
         sys.exit("The configuration file is not a regular file")
+
+    try:
+        version = _get_version(args.VERSION)
+    except KeyboardInterrupt:
+        sys.exit("Cancelled by user")
+
+    logger.info("Selected version string: %s", version)
 
     return 0
