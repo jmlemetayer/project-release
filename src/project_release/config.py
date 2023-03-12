@@ -2,32 +2,20 @@
 import logging
 from pathlib import Path
 from typing import Any
-from typing import List
-from typing import Optional
+from typing import Dict
 from typing import Union
 
 import schema
 import yaml
 
+from .convention import AcceptAllValidator
 from .convention import Pep440Validator
 from .convention import SemverValidator
-from .convention import VersionValidator
 from .file import EditedVersionFile
 from .file import FormattedVersionFile
 from .file import PlainVersionFile
-from .file import VersionFile
 
 logger = logging.getLogger(__name__)
-
-
-class _ConventionConfig:
-    def __init__(self) -> None:
-        self.version: Optional[VersionValidator] = None
-
-
-class _FileConfig:
-    def __init__(self) -> None:
-        self.version: List[VersionFile] = []
 
 
 class Config:
@@ -80,8 +68,10 @@ class Config:
 
     def __init__(self, path: Union[Path, str]) -> None:
         self.__path = path
-        self.convention = _ConventionConfig()
-        self.file = _FileConfig()
+        self.__config: Dict[str, Any] = {
+            "version_validator": AcceptAllValidator(),
+            "version_files": [],
+        }
 
     def __parse_convention(self, data: Any) -> None:
         """Parse the 'convention' dictionary."""
@@ -89,24 +79,28 @@ class Config:
         if convention is not None:
             version = convention.get("version")
             if version == "semver":
-                self.convention.version = SemverValidator()
+                self.__config["version_validator"] = SemverValidator()
             elif version == "pep440":
-                self.convention.version = Pep440Validator()
+                self.__config["version_validator"] = Pep440Validator()
 
-    def __parse_file_version_item(self, data: Any) -> None:
+    def __parse_version_files_item(self, data: Any) -> None:
         """Parse the 'file.version' item."""
         if isinstance(data, str):
-            return self.file.version.append(PlainVersionFile(data))
+            return self.__config["version_files"].append(PlainVersionFile(data))
 
         path = data.get("path")
         f0rmat = data.get("format")
         pattern = data.get("pattern")
 
         if f0rmat is not None:
-            return self.file.version.append(FormattedVersionFile(path, f0rmat))
+            return self.__config["version_files"].append(
+                FormattedVersionFile(path, f0rmat)
+            )
         if pattern is not None:
-            return self.file.version.append(EditedVersionFile(path, pattern))
-        return self.file.version.append(PlainVersionFile(path))
+            return self.__config["version_files"].append(
+                EditedVersionFile(path, pattern)
+            )
+        return self.__config["version_files"].append(PlainVersionFile(path))
 
     def __parse_file(self, data: Any) -> None:
         """Parse the 'file' dictionary."""
@@ -116,9 +110,9 @@ class Config:
             if versions is not None:
                 if isinstance(versions, list):
                     for version in versions:
-                        self.__parse_file_version_item(version)
+                        self.__parse_version_files_item(version)
                 else:
-                    self.__parse_file_version_item(versions)
+                    self.__parse_version_files_item(versions)
 
     def parse(self) -> None:
         """Parse the config file.
@@ -133,5 +127,24 @@ class Config:
         with open(self.__path, encoding="utf-8") as stream:
             data = yaml.safe_load(stream)
         validated = self.__SCHEMA.validate(data)
+
         self.__parse_convention(validated)
         self.__parse_file(validated)
+
+    def __getitem__(self, key: str) -> Any:
+        """Get a value from the configuration.
+
+        See Also
+        --------
+        object.__getitem__
+        """
+        return self.__config[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Set a value to the configuration.
+
+        See Also
+        --------
+        object.__setitem__
+        """
+        self.__config[key] = value
