@@ -21,6 +21,21 @@ logger = logging.getLogger(__name__)
 CONFIG_FILE = ".project-release-config.yaml"
 
 
+def _get_remote(git_repo: git.Repo, git_remote: Optional[str]) -> Optional[str]:
+    git_remotes = [x.name for x in git_repo.remotes]
+    if git_remote is not None:
+        if git_remote not in git_remotes:
+            sys.exit(f"Invalid git remote: '{git_remote}'")
+        return git_remote
+    if not git_remotes:
+        return None
+    if len(git_remotes) == 1:
+        return git_remotes[0]
+    return questionary.select(
+        "Select the git remote to use", choices=[x.name for x in git_repo.remotes]
+    ).unsafe_ask()
+
+
 def _get_version(
     version: Optional[str], validate: Callable[[str], Union[bool, str]]
 ) -> str:
@@ -64,6 +79,10 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         help="specify an alternate configuration file",
     )
 
+    git_group = parser.add_argument_group("git options")
+
+    git_group.add_argument("--git-remote", help="specify the git remote to use")
+
     args = parser.parse_args(args=argv)
 
     logging.basicConfig(
@@ -104,9 +123,12 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
 
     try:
         version = _get_version(args.VERSION, config["version_validator"].validate)
+
+        git_remote = _get_remote(git_repo, args.git_remote)
     except KeyboardInterrupt:
         sys.exit("Cancelled by user")
 
     logger.info("Selected version string: %s", version)
+    logger.info("Selected git remote: %s", git_remote)
 
     return 0
