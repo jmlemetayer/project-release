@@ -59,10 +59,49 @@ class Config:
         }
     )
 
+    __GIT_BRANCH_ITEM_SCALAR_SCHEMA = schema.And(str, len)
+
+    __GIT_BRANCH_ITEM_SCHEMA = schema.Schema(
+        schema.Or([__GIT_BRANCH_ITEM_SCALAR_SCHEMA], __GIT_BRANCH_ITEM_SCALAR_SCHEMA)
+    )
+
+    __GIT_BRANCH_SCHEMA = schema.Schema(
+        {
+            schema.Optional("development"): __GIT_BRANCH_ITEM_SCHEMA,
+            schema.Optional("release"): __GIT_BRANCH_ITEM_SCHEMA,
+        }
+    )
+
+    __GIT_COMMIT_SCHEMA = schema.Schema(
+        {
+            schema.Optional("message"): schema.And(str, len),
+            schema.Optional("sign-off"): bool,
+            schema.Optional("gpg-sign"): bool,
+        }
+    )
+
+    __GIT_TAG_SCHEMA = schema.Schema(
+        {
+            schema.Optional("format"): schema.And(str, len),
+            schema.Optional("message"): schema.And(str, len),
+            schema.Optional("annotate"): bool,
+            schema.Optional("gpg-sign"): bool,
+        }
+    )
+
+    __GIT_SCHEMA = schema.Schema(
+        {
+            schema.Optional("branch"): __GIT_BRANCH_SCHEMA,
+            schema.Optional("commit"): __GIT_COMMIT_SCHEMA,
+            schema.Optional("tag"): __GIT_TAG_SCHEMA,
+        }
+    )
+
     __SCHEMA = schema.Schema(
         {
             schema.Optional("convention"): __CONVENTION_SCHEMA,
             schema.Optional("file"): __FILE_SCHEMA,
+            schema.Optional("git"): __GIT_SCHEMA,
         }
     )
 
