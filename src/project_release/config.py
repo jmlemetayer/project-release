@@ -2,6 +2,7 @@
 import logging
 from pathlib import Path
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import Union
 
@@ -112,17 +113,25 @@ class Config:
             "version_files": [],
         }
 
+    def __parse_list(self, data: Any, parse: Callable[[Any], None]) -> None:
+        """Parse an item which can be a list or a scalar."""
+        if data is not None:
+            if isinstance(data, list):
+                for data_item in data:
+                    parse(data_item)
+            else:
+                parse(data)
+
     def __parse_convention(self, data: Any) -> None:
         """Parse the 'convention' dictionary."""
-        convention = data.get("convention")
-        if convention is not None:
-            version = convention.get("version")
+        if data is not None:
+            version = data.get("version")
             if version == "semver":
                 self.__config["version_validator"] = SemverValidator()
             elif version == "pep440":
                 self.__config["version_validator"] = Pep440Validator()
 
-    def __parse_version_files_item(self, data: Any) -> None:
+    def __parse_version_file(self, data: Any) -> None:
         """Parse the 'file.version' item."""
         if isinstance(data, str):
             return self.__config["version_files"].append(PlainVersionFile(data))
@@ -143,15 +152,8 @@ class Config:
 
     def __parse_file(self, data: Any) -> None:
         """Parse the 'file' dictionary."""
-        file = data.get("file")
-        if file is not None:
-            versions = file.get("version")
-            if versions is not None:
-                if isinstance(versions, list):
-                    for version in versions:
-                        self.__parse_version_files_item(version)
-                else:
-                    self.__parse_version_files_item(versions)
+        if data is not None:
+            self.__parse_list(data.get("version"), self.__parse_version_file)
 
     def parse(self) -> None:
         """Parse the config file.
@@ -167,8 +169,8 @@ class Config:
             data = yaml.safe_load(stream)
         validated = self.__SCHEMA.validate(data)
 
-        self.__parse_convention(validated)
-        self.__parse_file(validated)
+        self.__parse_convention(validated.get("convention"))
+        self.__parse_file(validated.get("file"))
 
     def __getitem__(self, key: str) -> Any:
         """Get a value from the configuration.
