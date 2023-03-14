@@ -111,16 +111,29 @@ class Config:
         self.__config: Dict[str, Any] = {
             "version_validator": AcceptAllValidator(),
             "version_files": [],
+            "git_development_branches": [],
+            "git_development_branch": None,
+            "git_release_branches": [],
+            "git_release_branch": None,
+            "git_commit_message": "bump: version %(version)s",
+            "git_commit_sign_off": False,
+            "git_commit_gpg_sign": False,
+            "git_tag_format": "%(version)s",
+            "git_tag_message": "version %(version)s",
+            "git_tag_annotate": True,
+            "git_tag_gpg_sign": False,
         }
 
-    def __parse_list(self, data: Any, parse: Callable[[Any], None]) -> None:
+    def __parse_list(
+        self, data: Any, parse: Callable[..., None], **kwargs: Any
+    ) -> None:
         """Parse an item which can be a list or a scalar."""
         if data is not None:
             if isinstance(data, list):
                 for data_item in data:
-                    parse(data_item)
+                    parse(data_item, **kwargs)
             else:
-                parse(data)
+                parse(data, **kwargs)
 
     def __parse_convention(self, data: Any) -> None:
         """Parse the 'convention' dictionary."""
@@ -155,6 +168,58 @@ class Config:
         if data is not None:
             self.__parse_list(data.get("version"), self.__parse_version_file)
 
+    def __parse_git_branch_item(self, data: Any, branch_name: str) -> None:
+        """Parse the 'git.branch.<branch_name>' item."""
+        self.__config[f"git_{branch_name}_branches"].append(data)
+
+    def __parse_git_branch(self, data: Any) -> None:
+        """Parse the 'git.branch' dictionary."""
+        if data is not None:
+            self.__parse_list(
+                data.get("development"),
+                self.__parse_git_branch_item,
+                branch_name="development",
+            )
+            self.__parse_list(
+                data.get("release"), self.__parse_git_branch_item, branch_name="release"
+            )
+
+    def __parse_git_commit(self, data: Any) -> None:
+        """Parse the 'git.commit' dictionary."""
+        if data is not None:
+            message = data.get("message")
+            if message is not None:
+                self.__config["git_commit_message"] = message
+            sign_off = data.get("sign-off")
+            if sign_off is not None:
+                self.__config["git_commit_sign_off"] = sign_off
+            gpg_sign = data.get("gpg-sign")
+            if gpg_sign is not None:
+                self.__config["git_commit_gpg_sign"] = gpg_sign
+
+    def __parse_git_tag(self, data: Any) -> None:
+        """Parse the 'git.tag' dictionary."""
+        if data is not None:
+            f0rmat = data.get("format")
+            if f0rmat is not None:
+                self.__config["git_tag_format"] = f0rmat
+            message = data.get("message")
+            if message is not None:
+                self.__config["git_tag_message"] = message
+            annotate = data.get("annotate")
+            if annotate is not None:
+                self.__config["git_tag_annotate"] = annotate
+            gpg_sign = data.get("gpg-sign")
+            if gpg_sign is not None:
+                self.__config["git_tag_gpg_sign"] = gpg_sign
+
+    def __parse_git(self, data: Any) -> None:
+        """Parse the 'git' dictionary."""
+        if data is not None:
+            self.__parse_git_branch(data.get("branch"))
+            self.__parse_git_commit(data.get("commit"))
+            self.__parse_git_tag(data.get("tag"))
+
     def parse(self) -> None:
         """Parse the config file.
 
@@ -171,6 +236,7 @@ class Config:
 
         self.__parse_convention(validated.get("convention"))
         self.__parse_file(validated.get("file"))
+        self.__parse_git(validated.get("git"))
 
     def __getitem__(self, key: str) -> Any:
         """Get a value from the configuration.
