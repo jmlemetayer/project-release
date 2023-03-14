@@ -79,7 +79,7 @@ repos:
       - id: bandit
         args: ["-c", "pyproject.toml"]
         additional_dependencies:
-          - toml
+          - ".[toml]"
   - repo: "https://github.com/PyCQA/pydocstyle"
     rev: 6.3.0
     hooks:
@@ -89,7 +89,7 @@ repos:
           - "--explain"
           - "--source"
         additional_dependencies:
-          - tomli
+          - ".[toml]"
   - repo: "https://github.com/commitizen-tools/commitizen"
     rev: v2.42.1
     hooks:
