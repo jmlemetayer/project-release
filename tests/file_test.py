@@ -40,7 +40,7 @@ class TestPlainVersionFile:
         with open(path, "w", encoding="utf-8") as stream:
             stream.write("")
         file = PlainVersionFile(path)
-        with pytest.raises(NoVersionFoundError):
+        with pytest.raises(EmptyVersionError):
             logger.info(file.version)
 
 
