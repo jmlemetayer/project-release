@@ -14,6 +14,7 @@ import yaml
 
 from . import __version__
 from .config import Config
+from .git import current_git_repo
 
 logger = logging.getLogger(__name__)
 
@@ -89,13 +90,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         level=logging.DEBUG if args.verbose else logging.INFO,
     )
 
-    try:
-        git_repo = git.Repo(search_parent_directories=True)
-    except git.InvalidGitRepositoryError as exc:
-        raise SystemExit("Not in a git repository") from exc
-
-    if git_repo.is_dirty():
-        raise SystemExit("The git repository is dirty")
+    git_repo = current_git_repo()
 
     git_dir = pathlib.Path(git_repo.git_dir)
 
