@@ -2,7 +2,6 @@
 import argparse
 import logging
 import pathlib
-import sys
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -25,7 +24,7 @@ def _get_remote(git_repo: git.Repo, git_remote: Optional[str]) -> Optional[str]:
     git_remotes = [x.name for x in git_repo.remotes]
     if git_remote is not None:
         if git_remote not in git_remotes:
-            sys.exit(f"Invalid git remote: '{git_remote}'")
+            raise SystemExit(f"Invalid git remote: '{git_remote}'")
         return git_remote
     if not git_remotes:
         return None
@@ -41,7 +40,7 @@ def _get_version(
 ) -> str:
     if version is not None:
         if validate(version) is not True:
-            sys.exit(validate(version))
+            raise SystemExit(validate(version))
         return version
     return questionary.text(
         "Specify the desired version string", validate=validate
@@ -92,21 +91,21 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
 
     try:
         git_repo = git.Repo(search_parent_directories=True)
-    except git.InvalidGitRepositoryError:
-        sys.exit("Not in a git repository")
+    except git.InvalidGitRepositoryError as exc:
+        raise SystemExit("Not in a git repository") from exc
 
     if git_repo.is_dirty():
-        sys.exit("The git repository is dirty")
+        raise SystemExit("The git repository is dirty")
 
     git_dir = pathlib.Path(git_repo.git_dir)
 
     config_file = git_dir.parent / args.config
 
     if not config_file.exists():
-        sys.exit("Configuration file not found")
+        raise SystemExit("Configuration file not found")
 
     if not config_file.is_file():
-        sys.exit("The configuration file is not a regular file")
+        raise SystemExit("The configuration file is not a regular file")
 
     config = Config(config_file)
 
@@ -117,16 +116,18 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         if hasattr(exc, "problem_mark"):
             mark = exc.problem_mark
             desc = f": syntax error at line {mark.line + 1}, column {mark.column + 1}"
-        sys.exit(f"The configuration file is not a valid yaml file{desc}")
+        raise SystemExit(
+            f"The configuration file is not a valid yaml file{desc}"
+        ) from exc
     except schema.SchemaError as exc:
-        sys.exit(f"The configuration file is not valid: {exc}")
+        raise SystemExit(f"The configuration file is not valid: {exc}") from exc
 
     try:
         version = _get_version(args.VERSION, config["version_validator"].validate)
 
         git_remote = _get_remote(git_repo, args.git_remote)
-    except KeyboardInterrupt:
-        sys.exit("Cancelled by user")
+    except KeyboardInterrupt as exc:
+        raise SystemExit("Cancelled by user") from exc
 
     logger.info("Selected version string: %s", version)
     logger.info("Selected git remote: %s", git_remote)
