@@ -2,50 +2,21 @@
 import argparse
 import logging
 import pathlib
-from typing import Callable
 from typing import List
 from typing import Optional
-from typing import Union
 
-import git
-import questionary
 import schema
 import yaml
 
 from . import __version__
 from .config import Config
 from .git import current_git_repo
+from .tui import select_git_remote
+from .tui import select_version
 
 logger = logging.getLogger(__name__)
 
 CONFIG_FILE = ".project-release-config.yaml"
-
-
-def _get_remote(git_repo: git.Repo, git_remote: Optional[str]) -> Optional[str]:
-    git_remotes = [x.name for x in git_repo.remotes]
-    if git_remote is not None:
-        if git_remote not in git_remotes:
-            raise SystemExit(f"Invalid git remote: '{git_remote}'")
-        return git_remote
-    if not git_remotes:
-        return None
-    if len(git_remotes) == 1:
-        return git_remotes[0]
-    return questionary.select(
-        "Select the git remote to use", choices=[x.name for x in git_repo.remotes]
-    ).unsafe_ask()
-
-
-def _get_version(
-    version: Optional[str], validate: Callable[[str], Union[bool, str]]
-) -> str:
-    if version is not None:
-        if validate(version) is not True:
-            raise SystemExit(validate(version))
-        return version
-    return questionary.text(
-        "Specify the desired version string", validate=validate
-    ).unsafe_ask()
 
 
 def project_release_cli(argv: Optional[List[str]] = None) -> int:
@@ -118,9 +89,9 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         raise SystemExit(f"The configuration file is not valid: {exc}") from exc
 
     try:
-        version = _get_version(args.VERSION, config["version_validator"].validate)
+        version = select_version(args.VERSION, config["version_validator"].validate)
 
-        git_remote = _get_remote(git_repo, args.git_remote)
+        git_remote = select_git_remote(git_repo, args.git_remote)
     except KeyboardInterrupt as exc:
         raise SystemExit("Cancelled by user") from exc
 
