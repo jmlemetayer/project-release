@@ -1,5 +1,6 @@
 """Config related code."""
 import logging
+import pathlib
 from pathlib import Path
 from typing import Any
 from typing import Callable
@@ -255,3 +256,44 @@ class Config:
         object.__setitem__
         """
         self.__config[key] = value
+
+
+def parse_config(config_file: pathlib.Path) -> Config:
+    """Return the configuration associated with the file.
+
+    Parameters
+    ----------
+    config_file
+        The configuration file to parse.
+
+    Returns
+    -------
+    Config
+        The current configuration object.
+
+    Raises
+    ------
+    SystemExit
+        If the configuration file is invalid or not found.
+    """
+    if not config_file.exists():
+        raise SystemExit("Configuration file not found")
+    if not config_file.is_file():
+        raise SystemExit("The configuration file is not a regular file")
+
+    config = Config(config_file)
+
+    try:
+        config.parse()
+    except yaml.YAMLError as exc:
+        desc = ""
+        if hasattr(exc, "problem_mark"):
+            mark = exc.problem_mark
+            desc = f": syntax error at line {mark.line + 1}, column {mark.column + 1}"
+        raise SystemExit(
+            f"The configuration file is not a valid yaml file{desc}"
+        ) from exc
+    except schema.SchemaError as exc:
+        raise SystemExit(f"The configuration file is not valid: {exc}") from exc
+
+    return config

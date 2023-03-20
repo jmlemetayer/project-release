@@ -5,11 +5,8 @@ import pathlib
 from typing import List
 from typing import Optional
 
-import schema
-import yaml
-
 from . import __version__
-from .config import Config
+from .config import parse_config
 from .git import current_git_repo
 from .tui import select_git_remote
 from .tui import select_version
@@ -67,26 +64,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
 
     config_file = git_dir.parent / args.config
 
-    if not config_file.exists():
-        raise SystemExit("Configuration file not found")
-
-    if not config_file.is_file():
-        raise SystemExit("The configuration file is not a regular file")
-
-    config = Config(config_file)
-
-    try:
-        config.parse()
-    except yaml.YAMLError as exc:
-        desc = ""
-        if hasattr(exc, "problem_mark"):
-            mark = exc.problem_mark
-            desc = f": syntax error at line {mark.line + 1}, column {mark.column + 1}"
-        raise SystemExit(
-            f"The configuration file is not a valid yaml file{desc}"
-        ) from exc
-    except schema.SchemaError as exc:
-        raise SystemExit(f"The configuration file is not valid: {exc}") from exc
+    config = parse_config(config_file)
 
     try:
         version = select_version(args.VERSION, config["version_validator"].validate)
