@@ -70,7 +70,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         version = select_version(args.VERSION, config["version_validator"].validate)
 
         git_remote = select_git_remote(git_repo, args.git_remote)
-    except KeyboardInterrupt as exc:
+    except (KeyboardInterrupt, EOFError) as exc:
         raise SystemExit("Cancelled by user") from exc
 
     logger.info("Selected version string: %s", version)
