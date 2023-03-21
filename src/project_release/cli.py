@@ -58,22 +58,21 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         level=logging.DEBUG if args.verbose else logging.INFO,
     )
 
-    git_repo = current_git_repo()
-
-    git_dir = pathlib.Path(git_repo.git_dir)
-
-    config_file = git_dir.parent / args.config
-
-    config = parse_config(config_file)
-
     try:
-        version = select_version(args.VERSION, config["version_validator"].validate)
+        git_repo = current_git_repo()
+        git_dir = pathlib.Path(git_repo.git_dir)
+        config_file = git_dir.parent / args.config
+        config = parse_config(config_file)
 
+        # Select the git remote
         git_remote = select_git_remote(git_repo, args.git_remote)
+        logger.info("Selected git remote: %s", git_remote)
+
+        # Select the version
+        version = select_version(args.VERSION, config["version_validator"].validate)
+        logger.info("Selected version string: %s", version)
+
     except (KeyboardInterrupt, EOFError) as exc:
         raise SystemExit("Cancelled by user") from exc
-
-    logger.info("Selected version string: %s", version)
-    logger.info("Selected git remote: %s", git_remote)
 
     return 0
