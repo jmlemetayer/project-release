@@ -7,8 +7,8 @@ from typing import Optional
 
 from . import __version__
 from .config import parse_config
-from .git import current_git_repo
-from .tui import select_git_remote
+from .git import current_repo
+from .tui import select_remote
 from .tui import select_version
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
 
     git_group = parser.add_argument_group("git options")
 
-    git_group.add_argument("--git-remote", help="specify the git remote to use")
+    git_group.add_argument("--remote", help="specify the git remote to use")
 
     args = parser.parse_args(args=argv)
 
@@ -59,14 +59,14 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
     )
 
     try:
-        git_repo = current_git_repo()
-        git_dir = pathlib.Path(git_repo.git_dir)
+        repo = current_repo()
+        git_dir = pathlib.Path(repo.git_dir)
         config_file = git_dir.parent / args.config
         config = parse_config(config_file)
 
         # Select the git remote
-        git_remote = select_git_remote(git_repo, args.git_remote)
-        logger.info("Selected git remote: %s", git_remote)
+        remote = select_remote(repo, args.remote)
+        logger.info("Selected git remote: %s", remote)
 
         # Select the version
         version = select_version(args.VERSION, config["version_validator"].validate)
