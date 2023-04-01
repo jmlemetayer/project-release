@@ -49,6 +49,7 @@ def select_remote(repo: git.Repo, user_remote: Optional[str]) -> Optional[str]:
 def select_branch(
     branch_name: str,
     config_branches: List[str],
+    repo_branches: List[str],
     user_branch: Optional[str],
 ) -> str:
     """Select the git branch to use.
@@ -59,6 +60,8 @@ def select_branch(
         The name of the branch.
     config_branches
         The git branches available in configuration.
+    repo_branches
+        The git branches available in the repository.
     user_branch
         The user-specified git branch.
 
@@ -93,8 +96,18 @@ def select_branch(
         return user_branch
     if not pattern_branches and len(plain_branches) == 1:
         return plain_branches[0]
-    return questionary.text(
-        f"Specify the desired {branch_name} branch", validate=validate_branch
+
+    potential_branches = [b for b in repo_branches if validate_branch(b) is True]
+    potential_branches = list({*potential_branches, *plain_branches})
+
+    if not potential_branches:
+        return questionary.text(
+            f"Specify the desired {branch_name} branch", validate=validate_branch
+        ).unsafe_ask()
+    return questionary.autocomplete(
+        f"Specify the desired {branch_name} branch",
+        choices=potential_branches,
+        validate=validate_branch,
     ).unsafe_ask()
 
 
