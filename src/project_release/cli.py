@@ -7,6 +7,7 @@ from typing import Optional
 
 from . import __version__
 from .config import parse_config
+from .git import current_branch
 from .git import current_branches
 from .git import current_repo
 from .tui import select_branch
@@ -77,6 +78,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         logger.info("Selected git remote: %s", remote)
 
         branches = current_branches(repo, remote)
+        default_branch = current_branch(repo)
 
         # Select the git development branch
         development_branch = select_branch(
@@ -84,6 +86,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
             config["development_branches"],
             branches,
             args.development_branch,
+            default_branch,
         )
         logger.info("Selected git development branch: %s", development_branch)
 
@@ -93,6 +96,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
             config["release_branches"],
             branches,
             args.release_branch,
+            development_branch,
         )
         logger.info("Selected git release branch: %s", release_branch)
 

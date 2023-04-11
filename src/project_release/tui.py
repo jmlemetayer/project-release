@@ -51,6 +51,7 @@ def select_branch(
     config_branches: List[str],
     repo_branches: List[str],
     user_branch: Optional[str],
+    default_branch: Optional[str],
 ) -> str:
     """Select the git branch to use.
 
@@ -64,6 +65,8 @@ def select_branch(
         The git branches available in the repository.
     user_branch
         The user-specified git branch.
+    default_branch
+        The default git branch.
 
     Returns
     -------
@@ -100,13 +103,16 @@ def select_branch(
     potential_branches = [b for b in repo_branches if validate_branch(b) is True]
     potential_branches = list({*potential_branches, *plain_branches})
 
-    if not potential_branches:
-        return questionary.text(
-            f"Specify the desired {branch_name} branch", validate=validate_branch
+    if potential_branches:
+        return questionary.autocomplete(
+            f"Specify the desired {branch_name} branch",
+            default=default_branch or "",
+            choices=potential_branches,
+            validate=validate_branch,
         ).unsafe_ask()
-    return questionary.autocomplete(
+    return questionary.text(
         f"Specify the desired {branch_name} branch",
-        choices=potential_branches,
+        default=default_branch or "",
         validate=validate_branch,
     ).unsafe_ask()
 
