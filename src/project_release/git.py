@@ -32,7 +32,7 @@ def current_repo() -> git.Repo:
     return repo
 
 
-def get_local_branches(repo: git.Repo) -> List[str]:
+def local_branches(repo: git.Repo) -> List[str]:
     """Return the local branches.
 
     Parameters
@@ -48,7 +48,7 @@ def get_local_branches(repo: git.Repo) -> List[str]:
     return [branch.name for branch in repo.heads]
 
 
-def get_remote_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
+def remote_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
     """Return the remote branches.
 
     Parameters
@@ -72,7 +72,7 @@ def get_remote_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
     ]
 
 
-def get_all_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
+def current_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
     """Return the local and remote branches.
 
     Parameters
@@ -87,6 +87,4 @@ def get_all_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
     list of str
         The local and remote branches.
     """
-    local_branches = get_local_branches(repo)
-    remote_branches = get_remote_branches(repo, remote)
-    return list({*local_branches, *remote_branches})
+    return list({*local_branches(repo), *remote_branches(repo, remote)})

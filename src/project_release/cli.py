@@ -7,8 +7,8 @@ from typing import Optional
 
 from . import __version__
 from .config import parse_config
+from .git import current_branches
 from .git import current_repo
-from .git import get_all_branches
 from .tui import select_branch
 from .tui import select_remote
 from .tui import select_version
@@ -76,20 +76,23 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         remote = select_remote(repo, args.remote)
         logger.info("Selected git remote: %s", remote)
 
-        git_branches = get_all_branches(repo, remote)
+        branches = current_branches(repo, remote)
 
         # Select the git development branch
         development_branch = select_branch(
             "development",
             config["development_branches"],
-            git_branches,
+            branches,
             args.development_branch,
         )
         logger.info("Selected git development branch: %s", development_branch)
 
         # Select the git release branch
         release_branch = select_branch(
-            "release", config["release_branches"], git_branches, args.release_branch
+            "release",
+            config["release_branches"],
+            branches,
+            args.release_branch,
         )
         logger.info("Selected git release branch: %s", release_branch)
 
