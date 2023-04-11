@@ -88,3 +88,22 @@ def current_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
         The local and remote branches.
     """
     return list({*local_branches(repo), *remote_branches(repo, remote)})
+
+
+def current_branch(repo: git.Repo) -> Optional[str]:
+    """Return the current branch.
+
+    Parameters
+    ----------
+    repo
+        The current git repository.
+
+    Returns
+    -------
+    str or None
+        The current branch or None if detached.
+    """
+    try:
+        return repo.active_branch.name
+    except TypeError:
+        return None
