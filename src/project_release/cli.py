@@ -7,9 +7,12 @@ from typing import Optional
 
 from . import __version__
 from .config import parse_config
+from .git import create_branch
 from .git import current_branch_name
 from .git import current_repo
+from .git import local_branch_names
 from .git import repo_branch_names
+from .git import update_branch
 from .tui import select_branch_name
 from .tui import select_remote
 from .tui import select_version
@@ -58,7 +61,32 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
     )
     git_group.add_argument("--release-branch", help="specify the release branch to use")
 
+    git_group.add_argument(
+        "--no-fetch",
+        dest="fetch",
+        action="store_false",
+        help="do no fetch refs from the remote",
+    )
+    git_group.add_argument(
+        "--no-update",
+        dest="update",
+        action="store_false",
+        help="do no update the local branches from the remote",
+    )
+    git_group.add_argument(
+        "-f",
+        "--force-update",
+        action="store_true",
+        help="""
+        update local branches from the remote,
+        regardless of whether they have diverged
+        """,
+    )
+
     args = parser.parse_args(args=argv)
+
+    if not args.update:
+        args.fetch = False
 
     logging.basicConfig(
         format="%(levelname)s: %(message)s",
@@ -94,6 +122,35 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
             default_branch=development_branch_name,
         )
         logger.info("Selected release branch: %s", release_branch_name)
+
+        # Fetch the remote
+        if remote and args.fetch:
+            logger.debug("Fetching refs from remote %s", remote)
+            remote.fetch()
+
+        # Update the development and release branches
+        if development_branch_name not in local_branch_names(repo):
+            raise SystemExit(
+                f"The {development_branch_name} branch does not exists locally"
+            )
+        development_branch = repo.heads[development_branch_name]
+
+        if remote and args.update:
+            update_branch(development_branch, remote, args.force_update)
+
+        if release_branch_name not in local_branch_names(repo):
+            release_branch = create_branch(
+                release_branch_name, development_branch, remote
+            )
+        else:
+            release_branch = repo.heads[release_branch_name]
+
+            if remote and args.update:
+                update_branch(release_branch, remote, args.force_update)
+
+        # Checkout the release branch
+        logger.debug("Switching to the %s branch", release_branch)
+        release_branch.checkout()
 
         # Select the version
         version = select_version(args.VERSION, config["version_validator"].validate)
