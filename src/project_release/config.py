@@ -3,12 +3,16 @@ import logging
 import pathlib
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Dict
 from typing import Union
 
-import schema
 import yaml
+from schema import And
+from schema import Optional
+from schema import Or
+from schema import Schema
+from schema import SchemaError
+from schema import Use
 
 from .convention import AcceptAllValidator
 from .convention import Pep440Validator
@@ -20,204 +24,176 @@ from .file import PlainVersionFile
 logger = logging.getLogger(__name__)
 
 
+def _schema_list_like(schema: Schema) -> Schema:
+    return Schema(Or(And(schema, Use(lambda x: [x])), [schema]))
+
+
 class Config:
     """A class to handle the config file."""
 
-    __CONVENTION_VERSION_SCHEMA = schema.Schema(
-        schema.And(str, schema.Use(str.lower), lambda s: s in ("semver", "pep440"))
+    __DEFAULT_CONVENTION_VERSION = None
+    __DEFAULT_GIT_COMMIT_MESSAGE = "bump: version %(version)s"
+    __DEFAULT_GIT_COMMIT_SIGN_OFF = False
+    __DEFAULT_GIT_COMMIT_GPG_SIGN = False
+    __DEFAULT_GIT_TAG_FORMAT = "%(version)s"
+    __DEFAULT_GIT_TAG_MESSAGE = "version %(version)s"
+    __DEFAULT_GIT_TAG_ANNOTATE = False
+    __DEFAULT_GIT_TAG_GPG_SIGN = False
+
+    __SCHEMA_CONVENTION_VERSION = Schema(
+        And(str, Use(str.lower), lambda x: x in ("semver", "pep440"))
     )
 
-    __CONVENTION_SCHEMA = schema.Schema(
-        {schema.Optional("version"): __CONVENTION_VERSION_SCHEMA}
+    __SCHEMA_CONVENTION = Schema(
+        {
+            Optional(
+                "version", default=__DEFAULT_CONVENTION_VERSION
+            ): __SCHEMA_CONVENTION_VERSION
+        }
     )
 
-    __FILE_VERSION_PLAIN_SCHEMA = schema.Schema(
-        schema.Or({"path": schema.And(str, len)}, schema.And(str, len))
-    )
-
-    __FILE_VERSION_FORMATTED_SCHEMA = schema.Schema(
-        {"path": schema.And(str, len), "format": schema.And(str, len)}
-    )
-
-    __FILE_VERSION_EDITED_SCHEMA = schema.Schema(
-        {"path": schema.And(str, len), "pattern": schema.And(str, len)}
-    )
-
-    __FILE_VERSION_SCALAR_SCHEMA = schema.Schema(
-        schema.Or(
-            __FILE_VERSION_PLAIN_SCHEMA,
-            __FILE_VERSION_FORMATTED_SCHEMA,
-            __FILE_VERSION_EDITED_SCHEMA,
+    __SCHEMA_FILE_VERSION_PLAIN = Schema(
+        Or(
+            And(str, len, Use(lambda x: {"path": x})),
+            {"path": And(str, len)},
         )
     )
 
-    __FILE_VERSION_SCHEMA = schema.Schema(
-        schema.Or([__FILE_VERSION_SCALAR_SCHEMA], __FILE_VERSION_SCALAR_SCHEMA)
+    __SCHEMA_FILE_VERSION_FORMATTED = Schema(
+        {"path": And(str, len), "format": And(str, len)}
     )
 
-    __FILE_SCHEMA = schema.Schema(
+    __SCHEMA_FILE_VERSION_EDITED = Schema(
+        {"path": And(str, len), "pattern": And(str, len)}
+    )
+
+    __SCHEMA_FILE_VERSION = Schema(
+        Or(
+            __SCHEMA_FILE_VERSION_PLAIN,
+            __SCHEMA_FILE_VERSION_FORMATTED,
+            __SCHEMA_FILE_VERSION_EDITED,
+        )
+    )
+
+    __SCHEMA_FILE_VERSION_LIST = _schema_list_like(__SCHEMA_FILE_VERSION)
+
+    __SCHEMA_FILE = Schema(
         {
-            schema.Optional("version"): __FILE_VERSION_SCHEMA,
+            Optional("version", default=[]): __SCHEMA_FILE_VERSION_LIST,
         }
     )
 
-    __GIT_BRANCH_ITEM_SCALAR_SCHEMA = schema.And(str, len)
+    __SCHEMA_GIT_BRANCH_ITEM = And(str, len)
 
-    __GIT_BRANCH_ITEM_SCHEMA = schema.Schema(
-        schema.Or([__GIT_BRANCH_ITEM_SCALAR_SCHEMA], __GIT_BRANCH_ITEM_SCALAR_SCHEMA)
-    )
+    __SCHEMA_GIT_BRANCH_LIST = _schema_list_like(__SCHEMA_GIT_BRANCH_ITEM)
 
-    __GIT_BRANCH_SCHEMA = schema.Schema(
+    __SCHEMA_GIT_BRANCH = Schema(
         {
-            schema.Optional("development"): __GIT_BRANCH_ITEM_SCHEMA,
-            schema.Optional("release"): __GIT_BRANCH_ITEM_SCHEMA,
+            Optional("development", default=[]): __SCHEMA_GIT_BRANCH_LIST,
+            Optional("release", default=[]): __SCHEMA_GIT_BRANCH_LIST,
         }
     )
 
-    __GIT_COMMIT_SCHEMA = schema.Schema(
+    __SCHEMA_GIT_COMMIT = Schema(
         {
-            schema.Optional("message"): schema.And(str, len),
-            schema.Optional("sign-off"): bool,
-            schema.Optional("gpg-sign"): bool,
+            Optional("message", default=__DEFAULT_GIT_COMMIT_MESSAGE): And(str, len),
+            Optional("sign-off", default=__DEFAULT_GIT_COMMIT_SIGN_OFF): bool,
+            Optional("gpg-sign", default=__DEFAULT_GIT_COMMIT_GPG_SIGN): bool,
         }
     )
 
-    __GIT_TAG_SCHEMA = schema.Schema(
+    __SCHEMA_GIT_TAG = Schema(
         {
-            schema.Optional("format"): schema.And(str, len),
-            schema.Optional("message"): schema.And(str, len),
-            schema.Optional("annotate"): bool,
-            schema.Optional("gpg-sign"): bool,
+            Optional("format", default=__DEFAULT_GIT_TAG_FORMAT): And(str, len),
+            Optional("message", default=__DEFAULT_GIT_TAG_MESSAGE): And(str, len),
+            Optional("annotate", default=__DEFAULT_GIT_TAG_ANNOTATE): bool,
+            Optional("gpg-sign", default=__DEFAULT_GIT_TAG_GPG_SIGN): bool,
         }
     )
 
-    __GIT_SCHEMA = schema.Schema(
+    __SCHEMA_GIT = Schema(
         {
-            schema.Optional("branch"): __GIT_BRANCH_SCHEMA,
-            schema.Optional("commit"): __GIT_COMMIT_SCHEMA,
-            schema.Optional("tag"): __GIT_TAG_SCHEMA,
+            Optional(
+                "branch", default=__SCHEMA_GIT_BRANCH.validate({})
+            ): __SCHEMA_GIT_BRANCH,
+            Optional(
+                "commit", default=__SCHEMA_GIT_COMMIT.validate({})
+            ): __SCHEMA_GIT_COMMIT,
+            Optional("tag", default=__SCHEMA_GIT_TAG.validate({})): __SCHEMA_GIT_TAG,
         }
     )
 
-    __SCHEMA = schema.Schema(
+    __SCHEMA = Schema(
         {
-            schema.Optional("convention"): __CONVENTION_SCHEMA,
-            schema.Optional("file"): __FILE_SCHEMA,
-            schema.Optional("git"): __GIT_SCHEMA,
+            Optional(
+                "convention", default=__SCHEMA_CONVENTION.validate({})
+            ): __SCHEMA_CONVENTION,
+            Optional("file", default=__SCHEMA_FILE.validate({})): __SCHEMA_FILE,
+            Optional("git", default=__SCHEMA_GIT.validate({})): __SCHEMA_GIT,
         }
     )
 
     def __init__(self, path: Union[Path, str]) -> None:
         self.__path = path
         self.__config: Dict[str, Any] = {
-            "version_validator": AcceptAllValidator(),
             "version_files": [],
             "development_branches": [],
             "release_branches": [],
-            "commit_message": "bump: version %(version)s",
-            "commit_sign_off": False,
-            "commit_gpg_sign": False,
-            "tag_format": "%(version)s",
-            "tag_message": "version %(version)s",
-            "tag_annotate": True,
-            "tag_gpg_sign": False,
         }
 
-    def __parse_list(
-        self, data: Any, parse: Callable[..., None], **kwargs: Any
-    ) -> None:
-        """Parse an item which can be a list or a scalar."""
-        if data is not None:
-            if isinstance(data, list):
-                for data_item in data:
-                    parse(data_item, **kwargs)
-            else:
-                parse(data, **kwargs)
-
-    def __parse_convention(self, data: Any) -> None:
+    def __parse_convention(self, data: Dict[str, Any]) -> None:
         """Parse the 'convention' dictionary."""
-        if data is not None:
-            version = data.get("version")
-            if version == "semver":
-                self.__config["version_validator"] = SemverValidator()
-            elif version == "pep440":
-                self.__config["version_validator"] = Pep440Validator()
+        version = data["version"]
+        if version == self.__DEFAULT_CONVENTION_VERSION:
+            self.__config["version_validator"] = AcceptAllValidator()
+        elif version == "semver":
+            self.__config["version_validator"] = SemverValidator()
+        elif version == "pep440":
+            self.__config["version_validator"] = Pep440Validator()
 
-    def __parse_version_file(self, data: Any) -> None:
+    def __parse_version_file(self, data: Dict[str, Any]) -> None:
         """Parse the 'file.version' item."""
-        if isinstance(data, str):
-            return self.__config["version_files"].append(PlainVersionFile(data))
-
-        path = data.get("path")
+        path = data["path"]
         f0rmat = data.get("format")
         pattern = data.get("pattern")
 
         if f0rmat is not None:
-            return self.__config["version_files"].append(
-                FormattedVersionFile(path, f0rmat)
-            )
-        if pattern is not None:
-            return self.__config["version_files"].append(
-                EditedVersionFile(path, pattern)
-            )
-        return self.__config["version_files"].append(PlainVersionFile(path))
+            self.__config["version_files"].append(FormattedVersionFile(path, f0rmat))
+        elif pattern is not None:
+            self.__config["version_files"].append(EditedVersionFile(path, pattern))
+        else:
+            self.__config["version_files"].append(PlainVersionFile(path))
 
-    def __parse_file(self, data: Any) -> None:
+    def __parse_file(self, data: Dict[str, Any]) -> None:
         """Parse the 'file' dictionary."""
-        if data is not None:
-            self.__parse_list(data.get("version"), self.__parse_version_file)
+        for version_file in data["version"]:
+            self.__parse_version_file(version_file)
 
-    def __parse_branch_item(self, data: Any, branch_name: str) -> None:
-        """Parse the 'git.branch.<branch_name>' item."""
-        self.__config[f"{branch_name}_branches"].append(data)
-
-    def __parse_branch(self, data: Any) -> None:
+    def __parse_branch(self, data: Dict[str, Any]) -> None:
         """Parse the 'git.branch' dictionary."""
-        if data is not None:
-            self.__parse_list(
-                data.get("development"),
-                self.__parse_branch_item,
-                branch_name="development",
-            )
-            self.__parse_list(
-                data.get("release"), self.__parse_branch_item, branch_name="release"
-            )
+        for branch in data["development"]:
+            self.__config["development_branches"].append(branch)
+        for branch in data["release"]:
+            self.__config["release_branches"].append(branch)
 
-    def __parse_commit(self, data: Any) -> None:
+    def __parse_commit(self, data: Dict[str, Any]) -> None:
         """Parse the 'git.commit' dictionary."""
-        if data is not None:
-            message = data.get("message")
-            if message is not None:
-                self.__config["commit_message"] = message
-            sign_off = data.get("sign-off")
-            if sign_off is not None:
-                self.__config["commit_sign_off"] = sign_off
-            gpg_sign = data.get("gpg-sign")
-            if gpg_sign is not None:
-                self.__config["commit_gpg_sign"] = gpg_sign
+        self.__config["commit_message"] = data["message"]
+        self.__config["commit_sign_off"] = data["sign-off"]
+        self.__config["commit_gpg_sign"] = data["gpg-sign"]
 
-    def __parse_tag(self, data: Any) -> None:
+    def __parse_tag(self, data: Dict[str, Any]) -> None:
         """Parse the 'git.tag' dictionary."""
-        if data is not None:
-            f0rmat = data.get("format")
-            if f0rmat is not None:
-                self.__config["tag_format"] = f0rmat
-            message = data.get("message")
-            if message is not None:
-                self.__config["tag_message"] = message
-            annotate = data.get("annotate")
-            if annotate is not None:
-                self.__config["tag_annotate"] = annotate
-            gpg_sign = data.get("gpg-sign")
-            if gpg_sign is not None:
-                self.__config["tag_gpg_sign"] = gpg_sign
+        self.__config["tag_format"] = data["format"]
+        self.__config["tag_message"] = data["message"]
+        self.__config["tag_annotate"] = data["annotate"]
+        self.__config["tag_gpg_sign"] = data["gpg-sign"]
 
-    def __parse_git(self, data: Any) -> None:
+    def __parse_git(self, data: Dict[str, Any]) -> None:
         """Parse the 'git' dictionary."""
-        if data is not None:
-            self.__parse_branch(data.get("branch"))
-            self.__parse_commit(data.get("commit"))
-            self.__parse_tag(data.get("tag"))
+        self.__parse_branch(data["branch"])
+        self.__parse_commit(data["commit"])
+        self.__parse_tag(data["tag"])
 
     def parse(self) -> None:
         """Parse the config file.
@@ -226,16 +202,17 @@ class Config:
         ------
         yaml.YAMLError
             If the yaml syntax is invalid.
-        schema.SchemaError
+        SchemaError
             If the data schema is invalid.
         """
         with open(self.__path, encoding="utf-8") as stream:
             data = yaml.safe_load(stream)
         validated = self.__SCHEMA.validate(data)
+        logger.warning(validated)
 
-        self.__parse_convention(validated.get("convention"))
-        self.__parse_file(validated.get("file"))
-        self.__parse_git(validated.get("git"))
+        self.__parse_convention(validated["convention"])
+        self.__parse_file(validated["file"])
+        self.__parse_git(validated["git"])
 
     def __getitem__(self, key: str) -> Any:
         """Get a value from the configuration.
@@ -291,7 +268,7 @@ def parse_config(config_file: pathlib.Path) -> Config:
         raise SystemExit(
             f"The configuration file is not a valid yaml file{desc}"
         ) from exc
-    except schema.SchemaError as exc:
+    except SchemaError as exc:
         raise SystemExit(f"The configuration file is not valid: {exc}") from exc
 
     return config
