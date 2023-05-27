@@ -32,7 +32,7 @@ def current_repo() -> git.Repo:
     return repo
 
 
-def local_branches(repo: git.Repo) -> List[str]:
+def local_branch_names(repo: git.Repo) -> List[str]:
     """Return the local branches.
 
     Parameters
@@ -43,36 +43,34 @@ def local_branches(repo: git.Repo) -> List[str]:
     Returns
     -------
     list of str
-        The local branches.
+        The local branch names.
     """
     return [branch.name for branch in repo.heads]
 
 
-def remote_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
+def remote_branch_names(remote: Optional[git.Remote]) -> List[str]:
     """Return the remote branches.
 
     Parameters
     ----------
-    repo
-        The current git repository.
     remote
         The selected git remote.
 
     Returns
     -------
     list of str
-        The remote branches.
+        The remote branch names.
     """
     if remote is None:
         return []
     return [
         ref.name.replace(f"{remote}/", "")
-        for ref in repo.remote(remote).refs
+        for ref in remote.refs
         if not ref.name.endswith("HEAD")
     ]
 
 
-def current_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
+def repo_branch_names(repo: git.Repo, remote: Optional[git.Remote]) -> List[str]:
     """Return the local and remote branches.
 
     Parameters
@@ -80,18 +78,18 @@ def current_branches(repo: git.Repo, remote: Optional[str]) -> List[str]:
     repo
         The current git repository.
     remote
-        The selected git remote.
+        The selected remote.
 
     Returns
     -------
     list of str
         The local and remote branches.
     """
-    return list({*local_branches(repo), *remote_branches(repo, remote)})
+    return list({*local_branch_names(repo), *remote_branch_names(remote)})
 
 
-def current_branch(repo: git.Repo) -> Optional[str]:
-    """Return the current branch.
+def current_branch_name(repo: git.Repo) -> Optional[str]:
+    """Return the current branch name.
 
     Parameters
     ----------
@@ -101,7 +99,7 @@ def current_branch(repo: git.Repo) -> Optional[str]:
     Returns
     -------
     str or None
-        The current branch or None if detached.
+        The current branch name or None if detached.
     """
     try:
         return repo.active_branch.name

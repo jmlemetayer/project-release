@@ -7,10 +7,10 @@ from typing import Optional
 
 from . import __version__
 from .config import parse_config
-from .git import current_branch
-from .git import current_branches
+from .git import current_branch_name
 from .git import current_repo
-from .tui import select_branch
+from .git import repo_branch_names
+from .tui import select_branch_name
 from .tui import select_remote
 from .tui import select_version
 
@@ -52,13 +52,11 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
 
     git_group = parser.add_argument_group("git options")
 
-    git_group.add_argument("--remote", help="specify the git remote to use")
+    git_group.add_argument("--remote", help="specify the remote to use")
     git_group.add_argument(
-        "--development-branch", help="specify the git development branch to use"
+        "--development-branch", help="specify the development branch to use"
     )
-    git_group.add_argument(
-        "--release-branch", help="specify the git release branch to use"
-    )
+    git_group.add_argument("--release-branch", help="specify the release branch to use")
 
     args = parser.parse_args(args=argv)
 
@@ -73,32 +71,29 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         config_file = git_dir.parent / args.config
         config = parse_config(config_file)
 
-        # Select the git remote
+        # Select the remote
         remote = select_remote(repo, args.remote)
-        logger.info("Selected git remote: %s", remote)
+        logger.info("Selected remote: %s", remote)
 
-        branches = current_branches(repo, remote)
-        default_branch = current_branch(repo)
-
-        # Select the git development branch
-        development_branch = select_branch(
-            "development",
-            config["development_branches"],
-            branches,
-            args.development_branch,
-            default_branch,
+        # Select the development branch name
+        development_branch_name = select_branch_name(
+            branch_description="development",
+            config_branches=config["development_branches"],
+            repo_branches=repo_branch_names(repo, remote),
+            user_branch=args.development_branch,
+            default_branch=current_branch_name(repo),
         )
-        logger.info("Selected git development branch: %s", development_branch)
+        logger.info("Selected development branch: %s", development_branch_name)
 
-        # Select the git release branch
-        release_branch = select_branch(
-            "release",
-            config["release_branches"],
-            branches,
-            args.release_branch,
-            development_branch,
+        # Select the release branch name
+        release_branch_name = select_branch_name(
+            branch_description="release",
+            config_branches=config["release_branches"],
+            repo_branches=repo_branch_names(repo, remote),
+            user_branch=args.release_branch,
+            default_branch=development_branch_name,
         )
-        logger.info("Selected git release branch: %s", release_branch)
+        logger.info("Selected release branch: %s", release_branch_name)
 
         # Select the version
         version = select_version(args.VERSION, config["version_validator"].validate)

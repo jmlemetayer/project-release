@@ -12,86 +12,87 @@ import questionary
 logger = logging.getLogger(__name__)
 
 
-def select_remote(repo: git.Repo, user_remote: Optional[str]) -> Optional[str]:
-    """Select the git remote to use.
+def select_remote(repo: git.Repo, remote_name: Optional[str]) -> Optional[git.Remote]:
+    """Select the remote to use.
 
     Parameters
     ----------
     repo
         The current git repository.
-    user_remote
-        The user-specified git remote.
+    remote_name
+        The user-specified remote name.
 
     Returns
     -------
-    str or None
-        The selected git remote or None if not available.
+    git.Remote or None
+        The selected remote or None if not available.
 
     Raises
     ------
     SystemExit
-        If the specified git remote is invalid.
+        If the specified remote is invalid.
     """
-    available_remotes = [x.name for x in repo.remotes]
-    if user_remote is not None:
-        if user_remote not in available_remotes:
-            raise SystemExit(f"Invalid git remote: '{user_remote}'")
-        return user_remote
-    if not available_remotes:
+    available_remote_names = [x.name for x in repo.remotes]
+    if remote_name is not None:
+        if remote_name not in available_remote_names:
+            raise SystemExit(f"Invalid remote: '{remote_name}'")
+        return repo.remote(remote_name)
+    if not available_remote_names:
         return None
-    if len(available_remotes) == 1:
-        return available_remotes[0]
-    return questionary.select(
-        "Select the git remote to use", choices=[x.name for x in repo.remotes]
+    if len(available_remote_names) == 1:
+        return repo.remote(available_remote_names[0])
+    selected_remote = questionary.select(
+        "Select the remote to use", choices=available_remote_names
     ).unsafe_ask()
+    return repo.remote(selected_remote)
 
 
-def select_branch(
-    branch_name: str,
+def select_branch_name(
+    branch_description: str,
     config_branches: List[str],
     repo_branches: List[str],
     user_branch: Optional[str],
     default_branch: Optional[str],
 ) -> str:
-    """Select the git branch to use.
+    """Select the branch name to use.
 
     Parameters
     ----------
-    branch_name
-        The name of the branch.
+    branch_description
+        The description of the branch.
     config_branches
-        The git branches available in configuration.
+        The branch names available in configuration.
     repo_branches
-        The git branches available in the repository.
+        The branch names available in the repository.
     user_branch
-        The user-specified git branch.
+        The user-specified branch name.
     default_branch
-        The default git branch.
+        The default branch name.
 
     Returns
     -------
     str
-        The selected git branch.
+        The selected branch name.
 
     Raises
     ------
     SystemExit
-        If the specified git branch is invalid.
+        If the specified branch is invalid.
     """
 
-    def is_pattern_branch(branch: str) -> bool:
-        return any(c in branch for c in ["*", "?", "["])
+    def is_pattern_branch(branch_name: str) -> bool:
+        return any(c in branch_name for c in ["*", "?", "["])
 
     plain_branches = [b for b in config_branches if not is_pattern_branch(b)]
     pattern_branches = [b for b in config_branches if b not in plain_branches]
 
-    def validate_branch(branch: str) -> Union[bool, str]:
-        if branch in plain_branches:
+    def validate_branch(branch_name: str) -> Union[bool, str]:
+        if branch_name in plain_branches:
             return True
         for pattern in pattern_branches:
-            if fnmatch.fnmatchcase(branch, pattern):
+            if fnmatch.fnmatchcase(branch_name, pattern):
                 return True
-        return f"Invalid branch name: '{branch}'"
+        return f"Invalid branch name: '{branch_name}'"
 
     if user_branch is not None:
         if validate_branch(user_branch) is not True:
@@ -105,13 +106,13 @@ def select_branch(
 
     if potential_branches:
         return questionary.autocomplete(
-            f"Specify the desired {branch_name} branch",
+            f"Specify the desired {branch_description} branch",
             default=default_branch or "",
             choices=potential_branches,
             validate=validate_branch,
         ).unsafe_ask()
     return questionary.text(
-        f"Specify the desired {branch_name} branch",
+        f"Specify the desired {branch_description} branch",
         default=default_branch or "",
         validate=validate_branch,
     ).unsafe_ask()
