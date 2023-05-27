@@ -208,7 +208,6 @@ class Config:
         with open(self.__path, encoding="utf-8") as stream:
             data = yaml.safe_load(stream)
         validated = self.__SCHEMA.validate(data)
-        logger.warning(validated)
 
         self.__parse_convention(validated["convention"])
         self.__parse_file(validated["file"])
