@@ -39,4 +39,5 @@ html_theme = "sphinx_rtd_theme"
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/devdocs/", None),
+    "gitpython": ("https://gitpython.readthedocs.io/en/stable/", None),
 }
