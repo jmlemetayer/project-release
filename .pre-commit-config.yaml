@@ -31,7 +31,7 @@ repos:
         args:
           - "--py38-plus"
   - repo: "https://github.com/asottile/pyupgrade"
-    rev: v3.9.0
+    rev: v3.10.1
     hooks:
       - id: pyupgrade
         args:
@@ -59,7 +59,7 @@ repos:
           - types-pyyaml
           - types-setuptools
   - repo: "https://github.com/PyCQA/flake8"
-    rev: 6.0.0
+    rev: 6.1.0
     hooks:
       - id: flake8
   - repo: "https://github.com/PyCQA/pylint"
@@ -92,7 +92,7 @@ repos:
         additional_dependencies:
           - ".[toml]"
   - repo: "https://github.com/commitizen-tools/commitizen"
-    rev: 3.5.3
+    rev: 3.6.0
     hooks:
       - id: commitizen
         stages: [post-commit]
