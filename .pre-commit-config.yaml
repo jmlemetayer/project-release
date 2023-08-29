@@ -92,7 +92,7 @@ repos:
         additional_dependencies:
           - ".[toml]"
   - repo: "https://github.com/commitizen-tools/commitizen"
-    rev: 3.6.0
+    rev: 3.7.0
     hooks:
       - id: commitizen
         stages: [post-commit]
