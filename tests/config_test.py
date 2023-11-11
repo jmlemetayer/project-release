@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 import schema
 import yaml
+
 from project_release.config import Config
 from project_release.convention import AcceptAllValidator
 from project_release.convention import Pep440Validator
