@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import pytest
+
 from project_release.file import EditedVersionFile
 from project_release.file import EmptyVersionError
 from project_release.file import FormattedVersionFile
