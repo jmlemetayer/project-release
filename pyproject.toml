@@ -2,8 +2,12 @@
 requires = ["setuptools >= 46.4.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
 [[tool.mypy.overrides]]
-module = ["schema", "semver"]
+module = ["schema"]
 ignore_missing_imports = true
 
 [tool.pylint."messages control"]
