@@ -17,20 +17,11 @@ from pydantic import validate_call
 
 from ._pydantic import Listable
 from ._pydantic import UseDefaultValueModel
+from .error import VersionEmptyError
+from .error import VersionInconsistentError
+from .error import VersionNotFoundError
 
 logger = logging.getLogger(__name__)
-
-
-class NoVersionFoundError(Exception):
-    """No version has been found."""
-
-
-class EmptyVersionError(Exception):
-    """An empty version has been found."""
-
-
-class InconsistentVersionError(Exception):
-    """Multiple inconsistent versions has been found."""
 
 
 class VersionFile(ABC, BaseModel):
@@ -50,22 +41,20 @@ class VersionFile(ABC, BaseModel):
 
         Raises
         ------
-        NoVersionFoundError
+        VersionNotFoundError
             If no version has been found.
-        EmptyVersionError
+        VersionEmptyError
             If an empty version has been found.
-        InconsistentVersionError
+        VersionInconsistentError
             If multiple inconsistent versions has been found.
         """
         versions = self.versions
         if not versions:
-            raise NoVersionFoundError(f"No version found in file: {self._path}")
+            raise VersionNotFoundError(self._path)
         if not all(version == versions[0] for version in versions):
-            raise InconsistentVersionError(
-                f"Inconsistent version found in file: {self._path}: {versions}"
-            )
+            raise VersionInconsistentError(self._path, versions)
         if versions[0] == "":
-            raise EmptyVersionError(f"No version found in file: {self._path}")
+            raise VersionEmptyError(self._path)
         return versions[0]
 
     @version.setter
@@ -165,7 +154,7 @@ VersionConfigType = Union[str, Dict[str, str]]
 class FileConfig(UseDefaultValueModel):
     """File configuration."""
 
-    version: List[VersionFile] = []
+    version: List[VersionFile] = []  # noqa: RUF012
 
     @field_validator("version", mode="before")
     @classmethod

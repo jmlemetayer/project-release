@@ -5,7 +5,7 @@ from project_release import __version__
 from project_release.cli import project_release_cli
 
 
-class TestCli:  # pylint: disable=too-few-public-methods
+class TestCli:
     """Test cases related to the CLI command."""
 
     def test_version(self, capsys: pytest.CaptureFixture) -> None:

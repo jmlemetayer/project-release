@@ -10,6 +10,7 @@ from project_release.config import parse_config
 from project_release.convention import AcceptAllValidator
 from project_release.convention import Pep440Validator
 from project_release.convention import SemverValidator
+from project_release.error import InvalidConfigFileError
 from project_release.file import EditedVersionFile
 from project_release.file import FormattedVersionFile
 from project_release.file import PlainVersionFile
@@ -17,7 +18,7 @@ from project_release.file import PlainVersionFile
 logger = logging.getLogger(__name__)
 
 
-class TestConfig:  # pylint: disable=too-few-public-methods
+class TestConfig:
     """Base class for the config tests."""
 
     def write_yaml(self, path: Path, data: Any) -> Path:
@@ -58,7 +59,7 @@ class TestConventionConfig(TestConfig):
     def test_version_invalid(self, tmp_path: Path) -> None:
         """Test that a config with 'version=invalid' is invalid."""
         path = self.write_yaml(tmp_path, {"convention": {"version": "invalid"}})
-        with pytest.raises(SystemExit):
+        with pytest.raises(InvalidConfigFileError):
             parse_config(path)
 
 
@@ -87,19 +88,19 @@ class TestFileConfig(TestConfig):
     def test_version_not_dict(self, tmp_path: Path) -> None:
         """Test that a config with 'version' not as 'dict' is invalid."""
         path = self.write_yaml(tmp_path, {"file": {"version": 1234}})
-        with pytest.raises(SystemExit):
+        with pytest.raises(InvalidConfigFileError):
             parse_config(path)
 
     def test_version_no_path(self, tmp_path: Path) -> None:
         """Test that a config without 'path' is invalid."""
         path = self.write_yaml(tmp_path, {"file": {"version": {}}})
-        with pytest.raises(SystemExit):
+        with pytest.raises(InvalidConfigFileError):
             parse_config(path)
 
     def test_version_path_not_str(self, tmp_path: Path) -> None:
         """Test that a config with 'path' not as 'str' is invalid."""
         path = self.write_yaml(tmp_path, {"file": {"version": {"path": 1234}}})
-        with pytest.raises(SystemExit):
+        with pytest.raises(InvalidConfigFileError):
             parse_config(path)
 
     def test_version_path(self, tmp_path: Path) -> None:
@@ -114,7 +115,7 @@ class TestFileConfig(TestConfig):
         path = self.write_yaml(
             tmp_path, {"file": {"version": {"path": "path", "format": 1234}}}
         )
-        with pytest.raises(SystemExit):
+        with pytest.raises(InvalidConfigFileError):
             parse_config(path)
 
     def test_version_format(self, tmp_path: Path) -> None:
@@ -131,7 +132,7 @@ class TestFileConfig(TestConfig):
         path = self.write_yaml(
             tmp_path, {"file": {"version": {"path": "path", "pattern": 1234}}}
         )
-        with pytest.raises(SystemExit):
+        with pytest.raises(InvalidConfigFileError):
             parse_config(path)
 
     def test_version_pattern(self, tmp_path: Path) -> None:
@@ -157,7 +158,7 @@ class TestFileConfig(TestConfig):
                 }
             },
         )
-        with pytest.raises(SystemExit):
+        with pytest.raises(InvalidConfigFileError):
             parse_config(path)
 
     def test_version_list(self, tmp_path: Path) -> None:

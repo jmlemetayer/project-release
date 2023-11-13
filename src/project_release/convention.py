@@ -85,9 +85,10 @@ class SemverValidator(VersionValidator):
         """
         try:
             semver.VersionInfo.parse(version)
-            return True
         except ValueError:
             return f"Invalid semver version string: '{version}'"
+        else:
+            return True
 
     def _serialize(self) -> str:
         return "semver"
