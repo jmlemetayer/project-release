@@ -52,6 +52,7 @@ repos:
         additional_dependencies:
           - gitpython~=3.1.37
           - pep440~=0.1.2
+          - pydantic~=2.4.0
           - pytest
           - questionary~=2.0.1
           - semver~=3.0.1
@@ -68,10 +69,10 @@ repos:
         additional_dependencies:
           - gitpython~=3.1.37
           - pep440~=0.1.2
+          - pydantic~=2.4.0
           - pytest
           - pyyaml~=6.0.1
           - questionary~=2.0.1
-          - schema~=0.7.5
           - semver~=3.0.1
   - repo: "https://github.com/PyCQA/bandit"
     rev: 1.7.5

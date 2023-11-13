@@ -13,11 +13,7 @@ git:
     release: stable
 
   commit:
-    message: 'bump: version %(version)s'
     gpg-sign: true
 
   tag:
-    format: 'v%(version)s'
-    message: 'version %(version)s'
-    annotate: true
     gpg-sign: true

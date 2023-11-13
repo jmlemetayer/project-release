@@ -13,8 +13,8 @@ class TestAcceptAllValidator:
 
     def test_valid(self) -> None:
         """Test that a valid version is valid."""
-        assert AcceptAllValidator().validate("1.2.3+devel")
-        assert AcceptAllValidator().validate("1.2.3.dev1")
+        assert AcceptAllValidator().validate_version("1.2.3+devel")
+        assert AcceptAllValidator().validate_version("1.2.3.dev1")
 
 
 class TestSemverValidator:
@@ -22,11 +22,11 @@ class TestSemverValidator:
 
     def test_valid(self) -> None:
         """Test that a valid version is valid."""
-        assert SemverValidator().validate("1.2.3+devel")
+        assert SemverValidator().validate_version("1.2.3+devel")
 
     def test_invalid(self) -> None:
         """Test that an invalid version is invalid."""
-        assert isinstance(SemverValidator().validate("1.2.3.dev1"), str)
+        assert isinstance(SemverValidator().validate_version("1.2.3.dev1"), str)
 
 
 class TestPep440Validator:
@@ -34,8 +34,8 @@ class TestPep440Validator:
 
     def test_valid(self) -> None:
         """Test that a valid version is valid."""
-        assert Pep440Validator().validate("1.2.3.dev1")
+        assert Pep440Validator().validate_version("1.2.3.dev1")
 
     def test_invalid(self) -> None:
         """Test that an invalid version is invalid."""
-        assert isinstance(Pep440Validator().validate("1.2.3+devel"), str)
+        assert isinstance(Pep440Validator().validate_version("1.2.3+devel"), str)
