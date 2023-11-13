@@ -4,10 +4,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import schema
 import yaml
 
-from project_release.config import Config
+from project_release.config import parse_config
 from project_release.convention import AcceptAllValidator
 from project_release.convention import Pep440Validator
 from project_release.convention import SemverValidator
@@ -35,37 +34,32 @@ class TestConventionConfig(TestConfig):
     def test_no_convention(self, tmp_path: Path) -> None:
         """Test that a config without 'convention' is valid."""
         path = self.write_yaml(tmp_path, {})
-        config = Config(path)
-        config.parse()
-        assert isinstance(config["version_validator"], AcceptAllValidator)
+        config = parse_config(path)
+        assert isinstance(config.convention.version, AcceptAllValidator)
 
     def test_no_version(self, tmp_path: Path) -> None:
         """Test that a config without 'version' is valid."""
         path = self.write_yaml(tmp_path, {"convention": {}})
-        config = Config(path)
-        config.parse()
-        assert isinstance(config["version_validator"], AcceptAllValidator)
+        config = parse_config(path)
+        assert isinstance(config.convention.version, AcceptAllValidator)
 
     def test_version_semver(self, tmp_path: Path) -> None:
         """Test that a config with 'version=semver' is valid."""
         path = self.write_yaml(tmp_path, {"convention": {"version": "semver"}})
-        config = Config(path)
-        config.parse()
-        assert isinstance(config["version_validator"], SemverValidator)
+        config = parse_config(path)
+        assert isinstance(config.convention.version, SemverValidator)
 
     def test_version_pep440(self, tmp_path: Path) -> None:
         """Test that a config with 'version=pep440' is valid."""
         path = self.write_yaml(tmp_path, {"convention": {"version": "pep440"}})
-        config = Config(path)
-        config.parse()
-        assert isinstance(config["version_validator"], Pep440Validator)
+        config = parse_config(path)
+        assert isinstance(config.convention.version, Pep440Validator)
 
     def test_version_invalid(self, tmp_path: Path) -> None:
         """Test that a config with 'version=invalid' is invalid."""
         path = self.write_yaml(tmp_path, {"convention": {"version": "invalid"}})
-        config = Config(path)
-        with pytest.raises(schema.SchemaError):
-            config.parse()
+        with pytest.raises(SystemExit):
+            parse_config(path)
 
 
 class TestFileConfig(TestConfig):
@@ -74,91 +68,80 @@ class TestFileConfig(TestConfig):
     def test_no_file(self, tmp_path: Path) -> None:
         """Test that a config without 'file' is valid."""
         path = self.write_yaml(tmp_path, {})
-        config = Config(path)
-        config.parse()
-        assert not config["version_files"]
+        config = parse_config(path)
+        assert not config.file.version
 
     def test_no_version(self, tmp_path: Path) -> None:
         """Test that a config without 'version' is valid."""
         path = self.write_yaml(tmp_path, {"file": {}})
-        config = Config(path)
-        config.parse()
-        assert not config["version_files"]
+        config = parse_config(path)
+        assert not config.file.version
 
     def test_version(self, tmp_path: Path) -> None:
         """Test that a config with 'version' as 'str' is valid."""
         path = self.write_yaml(tmp_path, {"file": {"version": "path"}})
-        config = Config(path)
-        config.parse()
-        assert len(config["version_files"]) == 1
-        assert isinstance(config["version_files"][0], PlainVersionFile)
+        config = parse_config(path)
+        assert len(config.file.version) == 1
+        assert isinstance(config.file.version[0], PlainVersionFile)
 
     def test_version_not_dict(self, tmp_path: Path) -> None:
         """Test that a config with 'version' not as 'dict' is invalid."""
         path = self.write_yaml(tmp_path, {"file": {"version": 1234}})
-        config = Config(path)
-        with pytest.raises(schema.SchemaError):
-            config.parse()
+        with pytest.raises(SystemExit):
+            parse_config(path)
 
     def test_version_no_path(self, tmp_path: Path) -> None:
         """Test that a config without 'path' is invalid."""
         path = self.write_yaml(tmp_path, {"file": {"version": {}}})
-        config = Config(path)
-        with pytest.raises(schema.SchemaError):
-            config.parse()
+        with pytest.raises(SystemExit):
+            parse_config(path)
 
     def test_version_path_not_str(self, tmp_path: Path) -> None:
         """Test that a config with 'path' not as 'str' is invalid."""
         path = self.write_yaml(tmp_path, {"file": {"version": {"path": 1234}}})
-        config = Config(path)
-        with pytest.raises(schema.SchemaError):
-            config.parse()
+        with pytest.raises(SystemExit):
+            parse_config(path)
 
     def test_version_path(self, tmp_path: Path) -> None:
         """Test that a config with 'path' as 'str' is valid."""
         path = self.write_yaml(tmp_path, {"file": {"version": {"path": "path"}}})
-        config = Config(path)
-        config.parse()
-        assert len(config["version_files"]) == 1
-        assert isinstance(config["version_files"][0], PlainVersionFile)
+        config = parse_config(path)
+        assert len(config.file.version) == 1
+        assert isinstance(config.file.version[0], PlainVersionFile)
 
     def test_version_format_not_str(self, tmp_path: Path) -> None:
         """Test that a config with 'format' not as 'str' is invalid."""
         path = self.write_yaml(
             tmp_path, {"file": {"version": {"path": "path", "format": 1234}}}
         )
-        config = Config(path)
-        with pytest.raises(schema.SchemaError):
-            config.parse()
+        with pytest.raises(SystemExit):
+            parse_config(path)
 
     def test_version_format(self, tmp_path: Path) -> None:
         """Test that a config with 'format' as 'str' is valid."""
         path = self.write_yaml(
             tmp_path, {"file": {"version": {"path": "path", "format": "format"}}}
         )
-        config = Config(path)
-        config.parse()
-        assert len(config["version_files"]) == 1
-        assert isinstance(config["version_files"][0], FormattedVersionFile)
+        config = parse_config(path)
+        assert len(config.file.version) == 1
+        assert isinstance(config.file.version[0], FormattedVersionFile)
 
     def test_version_pattern_not_str(self, tmp_path: Path) -> None:
         """Test that a config with 'pattern' not as 'str' is invalid."""
         path = self.write_yaml(
             tmp_path, {"file": {"version": {"path": "path", "pattern": 1234}}}
         )
-        config = Config(path)
-        with pytest.raises(schema.SchemaError):
-            config.parse()
+        with pytest.raises(SystemExit):
+            parse_config(path)
 
     def test_version_pattern(self, tmp_path: Path) -> None:
         """Test that a config with 'pattern' as 'str' is valid."""
         path = self.write_yaml(
             tmp_path, {"file": {"version": {"path": "path", "pattern": "pattern"}}}
         )
-        config = Config(path)
-        config.parse()
-        assert len(config["version_files"]) == 1
-        assert isinstance(config["version_files"][0], EditedVersionFile)
+        config = parse_config(path)
+        assert len(config.file.version) == 1
+        assert isinstance(config.file.version[0], EditedVersionFile)
 
     def test_version_both_format_pattern(self, tmp_path: Path) -> None:
         """Test that a config with both 'format' and 'pattern' is invalid."""
@@ -174,9 +157,8 @@ class TestFileConfig(TestConfig):
                 }
             },
         )
-        config = Config(path)
-        with pytest.raises(schema.SchemaError):
-            config.parse()
+        with pytest.raises(SystemExit):
+            parse_config(path)
 
     def test_version_list(self, tmp_path: Path) -> None:
         """Test that a config with 'version' as 'list' is valid."""
@@ -193,10 +175,9 @@ class TestFileConfig(TestConfig):
                 }
             },
         )
-        config = Config(path)
-        config.parse()
-        assert len(config["version_files"]) == 4
-        assert isinstance(config["version_files"][0], PlainVersionFile)
-        assert isinstance(config["version_files"][1], PlainVersionFile)
-        assert isinstance(config["version_files"][2], FormattedVersionFile)
-        assert isinstance(config["version_files"][3], EditedVersionFile)
+        config = parse_config(path)
+        assert len(config.file.version) == 4
+        assert isinstance(config.file.version[0], PlainVersionFile)
+        assert isinstance(config.file.version[1], PlainVersionFile)
+        assert isinstance(config.file.version[2], FormattedVersionFile)
+        assert isinstance(config.file.version[3], EditedVersionFile)

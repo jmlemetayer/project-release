@@ -106,7 +106,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         # Select the development branch name
         development_branch_name = select_branch_name(
             branch_description="development",
-            config_branches=config["development_branches"],
+            config_branches=config.git.branch.development,
             repo_branches=repo_branch_names(repo, remote),
             user_branch=args.development_branch,
             default_branch=current_branch_name(repo),
@@ -116,7 +116,7 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         # Select the release branch name
         release_branch_name = select_branch_name(
             branch_description="release",
-            config_branches=config["release_branches"],
+            config_branches=config.git.branch.release,
             repo_branches=repo_branch_names(repo, remote),
             user_branch=args.release_branch,
             default_branch=development_branch_name,
@@ -153,7 +153,9 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         release_branch.checkout()
 
         # Select the version
-        version = select_version(args.VERSION, config["version_validator"].validate)
+        version = select_version(
+            args.VERSION, config.convention.version.validate_version
+        )
         logger.info("Selected version string: %s", version)
 
     except (KeyboardInterrupt, EOFError) as exc:

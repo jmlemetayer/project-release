@@ -5,10 +5,7 @@ build-backend = "setuptools.build_meta"
 [tool.mypy]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
-
-[[tool.mypy.overrides]]
-module = ["schema"]
-ignore_missing_imports = true
+plugins = "pydantic.mypy"
 
 [tool.pylint."messages control"]
 disable = ["too-few-public-methods"]
