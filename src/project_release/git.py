@@ -5,8 +5,56 @@ from typing import List
 from typing import Optional
 
 import git
+from pydantic import Field
+from pydantic import field_validator
+from pydantic import validate_call
+
+from ._pydantic import Listable
+from ._pydantic import UseDefaultValueModel
 
 logger = logging.getLogger(__name__)
+
+
+class GitBanchConfig(UseDefaultValueModel):
+    """Git branch configuration."""
+
+    development: List[str] = []
+    release: List[str] = []
+
+    @field_validator("development", "release", mode="before")
+    @classmethod
+    @validate_call
+    def _validate_branches(cls, value: Optional[Listable[str]]) -> List[str]:
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return value
+        return [value]
+
+
+class GitCommitConfig(UseDefaultValueModel):
+    """Git commit configuration."""
+
+    message: str = "bump: version %(version)s"
+    sign_off: bool = Field(default=False, alias="sign-off")
+    gpg_sign: bool = Field(default=False, alias="gpg-sign")
+
+
+class GitTagConfig(UseDefaultValueModel):
+    """Git tag configuration."""
+
+    fromat: str = Field(default="%(version)s", alias="format")
+    message: str = "version %(version)s"
+    annotate: bool = True
+    gpg_sign: bool = Field(default=False, alias="gpg-sign")
+
+
+class GitConfig(UseDefaultValueModel):
+    """Git configuration."""
+
+    branch: GitBanchConfig = GitBanchConfig()
+    commit: GitCommitConfig = GitCommitConfig()
+    tag: GitTagConfig = GitTagConfig()
 
 
 def current_repo() -> git.Repo:
@@ -27,8 +75,8 @@ def current_repo() -> git.Repo:
     except git.InvalidGitRepositoryError as exc:
         raise SystemExit("Not in a git repository") from exc
 
-    if repo.is_dirty():
-        raise SystemExit("The git repository is dirty")
+    # if repo.is_dirty():
+    #    raise SystemExit("The git repository is dirty")
 
     return repo
 

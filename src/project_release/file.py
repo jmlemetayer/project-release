@@ -4,8 +4,19 @@ import re
 from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
+from typing import Any
+from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Union
+
+from pydantic import BaseModel
+from pydantic import field_validator
+from pydantic import model_serializer
+from pydantic import validate_call
+
+from ._pydantic import Listable
+from ._pydantic import UseDefaultValueModel
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +33,7 @@ class InconsistentVersionError(Exception):
     """Multiple inconsistent versions has been found."""
 
 
-class VersionFile(ABC):
+class VersionFile(ABC, BaseModel):
     """An abstract class to handle a version file."""
 
     _path: Union[Path, str]
@@ -65,11 +76,21 @@ class VersionFile(ABC):
     def _set_version(self, version: str) -> None:
         raise NotImplementedError
 
+    @model_serializer
+    def serialize(self) -> Dict[str, Any]:
+        """Generate a dictionary representation of the model."""
+        return self._serialize()
+
+    @abstractmethod
+    def _serialize(self) -> Dict[str, Any]:
+        raise NotImplementedError
+
 
 class PlainVersionFile(VersionFile):
     """Plain version file."""
 
     def __init__(self, path: Union[Path, str]) -> None:
+        super().__init__()
         self._path = path
 
     @property
@@ -83,14 +104,18 @@ class PlainVersionFile(VersionFile):
         with open(self._path, "w", encoding="utf-8") as stream:
             stream.write(version)
 
+    def _serialize(self) -> Dict[str, Any]:
+        return {"path": self._path}
+
 
 class FormattedVersionFile(VersionFile):
     """Formatted version file."""
 
-    def __init__(self, path: Union[Path, str], f0rmat: str) -> None:
+    def __init__(self, path: Union[Path, str], fromat: str) -> None:
+        super().__init__()
         self._path = path
-        self.__f0rmat = f0rmat
-        self.__pattern = f0rmat % {"version": "(.*)"}
+        self.__fromat = fromat
+        self.__pattern = fromat % {"version": "(.*)"}
 
     @property
     def versions(self) -> List[str]:
@@ -104,13 +129,17 @@ class FormattedVersionFile(VersionFile):
 
     def _set_version(self, version: str) -> None:
         with open(self._path, "w", encoding="utf-8") as stream:
-            stream.write(self.__f0rmat % {"version": version})
+            stream.write(self.__fromat % {"version": version})
+
+    def _serialize(self) -> Dict[str, Any]:
+        return {"path": self._path, "format": self.__fromat}
 
 
 class EditedVersionFile(VersionFile):
     """Edited version file."""
 
     def __init__(self, path: Union[Path, str], pattern: str) -> None:
+        super().__init__()
         self._path = path
         self.__patern = pattern
 
@@ -125,3 +154,41 @@ class EditedVersionFile(VersionFile):
             data = stream.read()
             stream.seek(0)
             stream.write(re.sub(self.__patern, version, data))
+
+    def _serialize(self) -> Dict[str, Any]:
+        return {"path": self._path, "pattern": self.__patern}
+
+
+VersionConfigType = Union[str, Dict[str, str]]
+
+
+class FileConfig(UseDefaultValueModel):
+    """File configuration."""
+
+    version: List[VersionFile] = []
+
+    @field_validator("version", mode="before")
+    @classmethod
+    @validate_call
+    def _validate_version(
+        cls, value: Optional[Listable[VersionConfigType]]
+    ) -> List[VersionFile]:
+        @validate_call
+        def parse_version_file(value: VersionConfigType) -> VersionFile:
+            if isinstance(value, str):
+                return PlainVersionFile(value)
+            if "path" not in value:
+                raise ValueError("version file must contain a path")
+            if "format" in value and "pattern" in value:
+                raise ValueError("format and pattern fields are exclusive")
+            if "format" in value:
+                return FormattedVersionFile(value["path"], value["format"])
+            if "pattern" in value:
+                return EditedVersionFile(value["path"], value["pattern"])
+            return PlainVersionFile(value["path"])
+
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return [parse_version_file(x) for x in value]
+        return [parse_version_file(value)]
