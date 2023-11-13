@@ -2,16 +2,35 @@
 requires = ["setuptools >= 46.4.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff]
+src = ["src"]
+target-version = "py38"
+
+[tool.ruff.lint]
+select = [
+	#  Recommended
+	"A", "C90", "D", "E", "F", "I", "N", "PL", "S", "UP", "W",
+	# Optional
+	"PT", "RUF", "SIM",
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"*_test.py" = [
+	"PLR2004", # Allow magic values in tests
+	"S101",    # Allow assert() in tests
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
 [tool.mypy]
+python_version = "3.8"
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 plugins = "pydantic.mypy"
-
-[tool.pylint."messages control"]
-disable = ["too-few-public-methods"]
-
-[tool.bandit.assert_used]
-skips =  ["*_test.py"]
 
 [tool.pytest.ini_options]
 pythonpath = "src"

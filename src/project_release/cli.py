@@ -7,6 +7,7 @@ from typing import Optional
 
 from . import __version__
 from .config import parse_config
+from .error import ProjectReleaseError
 from .git import create_branch
 from .git import current_branch_name
 from .git import current_repo
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 CONFIG_FILE = ".project-release-config.yaml"
 
 
-def project_release_cli(argv: Optional[List[str]] = None) -> int:
+def project_release_cli(argv: Optional[List[str]] = None) -> int:  # noqa: PLR0915
     """Entry point for the command line.
 
     Parameters
@@ -157,6 +158,9 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
             args.VERSION, config.convention.version.validate_version
         )
         logger.info("Selected version string: %s", version)
+
+    except ProjectReleaseError as exc:
+        raise SystemExit(str(exc)) from exc
 
     except (KeyboardInterrupt, EOFError) as exc:
         raise SystemExit("Cancelled by user") from exc

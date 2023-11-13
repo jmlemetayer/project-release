@@ -5,11 +5,11 @@ from pathlib import Path
 import pytest
 
 from project_release.file import EditedVersionFile
-from project_release.file import EmptyVersionError
 from project_release.file import FormattedVersionFile
-from project_release.file import InconsistentVersionError
-from project_release.file import NoVersionFoundError
 from project_release.file import PlainVersionFile
+from project_release.file import VersionEmptyError
+from project_release.file import VersionInconsistentError
+from project_release.file import VersionNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class TestPlainVersionFile:
         with open(path, "w", encoding="utf-8") as stream:
             stream.write("")
         file = PlainVersionFile(path)
-        with pytest.raises(EmptyVersionError):
+        with pytest.raises(VersionEmptyError):
             logger.info(file.version)
 
 
@@ -100,7 +100,7 @@ class TestFormattedVersionFile:
         with open(path, "w", encoding="utf-8") as stream:
             stream.write("")
         file = FormattedVersionFile(path, self.FORMAT)
-        with pytest.raises(NoVersionFoundError):
+        with pytest.raises(VersionNotFoundError):
             logger.info(file.version)
 
     def test_read_inconsistent(self, tmp_path: Path) -> None:
@@ -110,7 +110,7 @@ class TestFormattedVersionFile:
         path = tmp_path / "VERSION"
         self.__create_version_file_2(path, version_1, version_2)
         file = FormattedVersionFile(path, self.FORMAT)
-        with pytest.raises(InconsistentVersionError):
+        with pytest.raises(VersionInconsistentError):
             logger.info(file.version)
 
     def test_read_empty(self, tmp_path: Path) -> None:
@@ -119,7 +119,7 @@ class TestFormattedVersionFile:
         path = tmp_path / "VERSION"
         self.__create_version_file(path, version)
         file = FormattedVersionFile(path, self.FORMAT)
-        with pytest.raises(EmptyVersionError):
+        with pytest.raises(VersionEmptyError):
             logger.info(file.version)
 
 
@@ -192,7 +192,7 @@ class TestEditedVersionFile:
         with open(path, "w", encoding="utf-8") as stream:
             stream.write("")
         file = EditedVersionFile(path, self.PATTERN)
-        with pytest.raises(NoVersionFoundError):
+        with pytest.raises(VersionNotFoundError):
             logger.info(file.version)
 
     def test_read_inconsistent(self, tmp_path: Path) -> None:
@@ -202,7 +202,7 @@ class TestEditedVersionFile:
         path = tmp_path / "VERSION"
         self.__create_version_file(path, version_1, version_2)
         file = EditedVersionFile(path, self.PATTERN)
-        with pytest.raises(InconsistentVersionError):
+        with pytest.raises(VersionInconsistentError):
             logger.info(file.version)
 
     def test_read_empty(self, tmp_path: Path) -> None:
@@ -211,5 +211,5 @@ class TestEditedVersionFile:
         path = tmp_path / "VERSION"
         self.__create_version_file(path, version, version)
         file = EditedVersionFile(path, self.PATTERN)
-        with pytest.raises(EmptyVersionError):
+        with pytest.raises(VersionEmptyError):
             logger.info(file.version)

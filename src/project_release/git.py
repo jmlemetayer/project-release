@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class GitBanchConfig(UseDefaultValueModel):
     """Git branch configuration."""
 
-    development: List[str] = []
-    release: List[str] = []
+    development: List[str] = []  # noqa: RUF012
+    release: List[str] = []  # noqa: RUF012
 
     @field_validator("development", "release", mode="before")
     @classmethod
