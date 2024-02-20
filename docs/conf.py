@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../src"))
 
-from project_release import __version__  # noqa: E402
+from project_release import __version__
 
 project = "project_release"
 copyright = "2022, Jean-Marie Lemetayer"  # noqa: A001
