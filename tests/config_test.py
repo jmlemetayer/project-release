@@ -7,6 +7,7 @@ import pytest
 import yaml
 
 from project_release.config import parse_config
+from project_release.config import sample_config
 from project_release.convention import AcceptAllValidator
 from project_release.convention import Pep440Validator
 from project_release.convention import SemverValidator
@@ -182,3 +183,11 @@ class TestFileConfig(TestConfig):
         assert isinstance(config.file.version[1], PlainVersionFile)
         assert isinstance(config.file.version[2], FormattedVersionFile)
         assert isinstance(config.file.version[3], EditedVersionFile)
+
+
+def test_sample_config(tmp_path: Path) -> None:
+    """Test that a sample config is valid."""
+    filename = tmp_path / "config.yaml"
+    with open(filename, "w", encoding="utf-8") as stream:
+        sample_config(stream)
+    parse_config(filename)
