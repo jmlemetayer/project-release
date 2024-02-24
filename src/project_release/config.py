@@ -18,6 +18,8 @@ from .git import GitConfig
 
 logger = logging.getLogger(__name__)
 
+CONFIG_FILE = ".project-release-config.yaml"
+
 
 class Config(UseDefaultValueModel):
     """Root configuration."""
