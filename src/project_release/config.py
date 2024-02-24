@@ -1,8 +1,11 @@
 """Config related code."""
 import logging
+import os
+import sys
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from typing import TextIO
 
 import yaml
 from pydantic import ValidationError
@@ -19,6 +22,7 @@ from .git import GitConfig
 logger = logging.getLogger(__name__)
 
 CONFIG_FILE = ".project-release-config.yaml"
+CONFIG_HELP = "See https://project-release.readthedocs.io for more information"
 
 
 class Config(UseDefaultValueModel):
@@ -65,3 +69,33 @@ def parse_config(config_file: Path) -> Config:
 
     except ValidationError as exc:
         raise InvalidConfigFileError(exc) from exc
+
+
+def dump_config(config: Config, stream: TextIO = sys.stdout) -> None:
+    """Dump a configuration object.
+
+    Parameters
+    ----------
+    config
+        The configuration object to print.
+    stream
+        The output stream (default: ``sys.stdout``).
+    """
+    stream.write(f"# {CONFIG_HELP}{os.linesep}")
+    yaml.safe_dump(
+        config.model_dump(by_alias=True),
+        stream,
+        default_flow_style=False,
+        line_break=os.linesep,
+    )
+
+
+def sample_config(stream: TextIO = sys.stdout) -> None:
+    """Dump a sample configuration.
+
+    Parameters
+    ----------
+    stream
+        The output stream (default: ``sys.stdout``).
+    """
+    dump_config(Config())
