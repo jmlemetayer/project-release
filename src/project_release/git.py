@@ -68,15 +68,12 @@ def current_repo() -> git.Repo:
     Raises
     ------
     SystemExit
-        If the git repository is invalid or dirty.
+        If the git repository is invalid.
     """
     try:
         repo = git.Repo(search_parent_directories=True)
     except git.InvalidGitRepositoryError as exc:
         raise SystemExit("Not in a git repository") from exc
-
-    if repo.is_dirty():
-        raise SystemExit("The git repository is dirty")
 
     return repo
 
