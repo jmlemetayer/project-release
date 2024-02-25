@@ -74,6 +74,11 @@ class VersionFile(ABC, BaseModel):
     def _serialize(self) -> Dict[str, Any]:
         raise NotImplementedError
 
+    def __repr__(self) -> str:
+        """Generate a string representation of the model."""
+        attrs = [f"{key}={value!r}" for key, value in self.serialize().items()]
+        return f"{self.__class__.__name__}({' '.join(attrs)})"
+
 
 class PlainVersionFile(VersionFile):
     """Plain version file."""

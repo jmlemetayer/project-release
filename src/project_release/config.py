@@ -52,6 +52,8 @@ def parse_config(config_file: Path) -> Config:
         If the configuration file is invalid or not found.
     """
     try:
+        logger.debug(f"parsing config file: {config_file}")
+
         with open(config_file, encoding="utf-8") as stream:
             data = yaml.safe_load(stream) or {}
 
@@ -59,7 +61,9 @@ def parse_config(config_file: Path) -> Config:
         def _parse_config(data: Dict[str, Any]) -> Config:
             return Config(**data)
 
-        return _parse_config(data)
+        config = _parse_config(data)
+        logger.debug(f"parsed config: {config}")
+        return config
 
     except (OSError, UnicodeError) as exc:
         raise InvalidUtf8FileError(exc) from exc
