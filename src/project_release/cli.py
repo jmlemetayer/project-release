@@ -9,6 +9,7 @@ from .config import CONFIG_FILE
 from .config import CONFIG_HELP
 from .config import sample_config
 from .error import ProjectReleaseError
+from .git import current_repo
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,8 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         if args.sample_config:
             sample_config()
             return 0
+
+        repo = current_repo()  # noqa: F841
 
     except ProjectReleaseError as exc:
         raise SystemExit(str(exc)) from exc
