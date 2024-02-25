@@ -130,22 +130,22 @@ class EditedVersionFile(VersionFile):
     def __init__(self, path: Union[Path, str], pattern: str) -> None:
         super().__init__()
         self._path = path
-        self.__patern = pattern
+        self.__pattern = pattern
 
     @property
     def versions(self) -> List[str]:
         """str: All the versions related to the file."""
         with open(self._path, encoding="utf-8") as stream:
-            return re.findall(self.__patern, stream.read())
+            return re.findall(self.__pattern, stream.read())
 
     def _set_version(self, version: str) -> None:
         with open(self._path, "r+", encoding="utf-8") as stream:
             data = stream.read()
             stream.seek(0)
-            stream.write(re.sub(self.__patern, version, data))
+            stream.write(re.sub(self.__pattern, version, data))
 
     def _serialize(self) -> Dict[str, Any]:
-        return {"path": self._path, "pattern": self.__patern}
+        return {"path": self._path, "pattern": self.__pattern}
 
 
 VersionConfigType = Union[str, Dict[str, str]]
