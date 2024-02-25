@@ -62,8 +62,12 @@ def parse_config(config_file: Path) -> Config:
             return Config(**data)
 
         config = _parse_config(data)
-        logger.debug(f"parsed config: {config}")
-        return config
+
+    except FileNotFoundError:
+        logger.warning(f"Configuration file not found: {config_file}")
+        logger.info("Please use --sample-config to generate one")
+        logger.info("Using the default configuration")
+        config = Config()
 
     except (OSError, UnicodeError) as exc:
         raise InvalidUtf8FileError(exc) from exc
@@ -73,6 +77,9 @@ def parse_config(config_file: Path) -> Config:
 
     except ValidationError as exc:
         raise InvalidConfigFileError(exc) from exc
+
+    logger.debug(f"parsed config: {config}")
+    return config
 
 
 def dump_config(config: Config, stream: TextIO = sys.stdout) -> None:

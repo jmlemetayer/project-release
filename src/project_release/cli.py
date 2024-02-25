@@ -1,12 +1,14 @@
 """The command line module."""
 import argparse
 import logging
+import pathlib
 from typing import List
 from typing import Optional
 
 from . import __version__
 from .config import CONFIG_FILE
 from .config import CONFIG_HELP
+from .config import parse_config
 from .config import sample_config
 from .error import ProjectReleaseError
 from .git import current_repo
@@ -37,6 +39,14 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug logs")
+
+    parser.add_argument(
+        "-c",
+        "--config",
+        default=CONFIG_FILE,
+        help="specify an alternate configuration file",
+    )
+
     parser.add_argument(
         "--sample-config", action="store_true", help=f"print a sample {CONFIG_FILE}"
     )
@@ -53,7 +63,11 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
             sample_config()
             return 0
 
-        repo = current_repo()  # noqa: F841
+        repo = current_repo()
+
+        git_dir = pathlib.Path(repo.git_dir)
+        config_file = git_dir.parent / args.config
+        config = parse_config(config_file)  # noqa: F841
 
     except ProjectReleaseError as exc:
         raise SystemExit(str(exc)) from exc
