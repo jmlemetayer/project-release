@@ -5,6 +5,8 @@ import pathlib
 from typing import List
 from typing import Optional
 
+import colorlog
+
 from . import __version__
 from .config import CONFIG_FILE
 from .config import CONFIG_HELP
@@ -41,6 +43,13 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug logs")
 
     parser.add_argument(
+        "--no-color",
+        action="store_false",
+        dest="color",
+        help="do not colorize the output",
+    )
+
+    parser.add_argument(
         "-c",
         "--config",
         default=CONFIG_FILE,
@@ -53,10 +62,17 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
 
     args = parser.parse_args(args=argv)
 
-    logging.basicConfig(
-        format="%(levelname)s: %(message)s",
-        level=logging.DEBUG if args.verbose else logging.INFO,
-    )
+    logging_format = "%(levelname)-8s %(message)s"
+    logging_level = logging.DEBUG if args.verbose else logging.INFO
+
+    if args.color:
+        logging_handler = colorlog.StreamHandler()
+        logging_handler.setFormatter(
+            colorlog.ColoredFormatter(f"%(log_color)s{logging_format}")
+        )
+        logging.basicConfig(handlers=[logging_handler], level=logging_level)
+    else:
+        logging.basicConfig(format=logging_format, level=logging_level)
 
     try:
         if args.sample_config:

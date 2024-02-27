@@ -36,6 +36,7 @@ repos:
       - id: mypy
         args: []
         additional_dependencies:
+          - colorlog~=6.8.2
           - gitpython~=3.1.37
           - pep440~=0.1.2
           - pydantic~=2.4.0
