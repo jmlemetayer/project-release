@@ -1,7 +1,7 @@
 """The command line module."""
 import argparse
 import logging
-import pathlib
+from pathlib import Path
 from typing import List
 from typing import Optional
 
@@ -10,9 +10,9 @@ import colorlog
 from . import __version__
 from .config import CONFIG_FILE
 from .config import CONFIG_HELP
-from .config import parse_config
 from .config import sample_config
 from .error import ProjectReleaseError
+from .fsm import FiniteStateMachine
 from .git import current_repo
 from .utils import log_exception
 
@@ -44,21 +44,35 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug logs")
 
     parser.add_argument(
+        "-c",
+        "--config",
+        type=Path,
+        help=f"specify an alternate configuration file (default: {CONFIG_FILE})",
+    )
+
+    parser.add_argument(
+        "--sample-config", action="store_true", help=f"print a sample {CONFIG_FILE}"
+    )
+
+    parser.add_argument(
         "--no-color",
         action="store_false",
         dest="color",
         help="do not colorize the output",
     )
 
-    parser.add_argument(
-        "-c",
-        "--config",
-        default=CONFIG_FILE,
-        help="specify an alternate configuration file",
+    fsm_group = parser.add_argument_group("state options")
+    fsm_group.add_argument(
+        "--status", action="store_true", help="show the release status"
     )
-
-    parser.add_argument(
-        "--sample-config", action="store_true", help=f"print a sample {CONFIG_FILE}"
+    fsm_group.add_argument(
+        "--continue",
+        action="store_true",
+        dest="cnotinue",
+        help="continue the release process",
+    )
+    fsm_group.add_argument(
+        "--abort", action="store_true", help="abort the release process"
     )
 
     args = parser.parse_args(args=argv)
@@ -81,16 +95,31 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
             return 0
 
         repo = current_repo()
+        fsm = FiniteStateMachine(repo)
 
-        git_dir = pathlib.Path(repo.git_dir)
-        config_file = git_dir.parent / args.config
-        config = parse_config(config_file)  # noqa: F841
+        if args.status:
+            fsm.status()
+            return 0
+
+        if args.abort:
+            fsm.abort()
+            return 0
+
+        if fsm.is_configured():
+            if not args.cnotinue:
+                raise SystemExit("You are currently releasing a new version")
+
+            fsm.cnotinue()
+            return 0
+
+        fsm.configure(args.config)
+        fsm.run()
 
     except (ProjectReleaseError, SystemExit) as exc:
         log_exception(exc, level=logging.CRITICAL)
         return 1
 
-    except (KeyboardInterrupt, EOFError) as exc:
-        raise SystemExit("Cancelled by user") from exc
+    except (KeyboardInterrupt, EOFError):
+        logger.info("Cancelled by user")
 
     return 0
