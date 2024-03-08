@@ -14,6 +14,7 @@ from .config import parse_config
 from .config import sample_config
 from .error import ProjectReleaseError
 from .git import current_repo
+from .utils import log_exception
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +86,9 @@ def project_release_cli(argv: Optional[List[str]] = None) -> int:
         config_file = git_dir.parent / args.config
         config = parse_config(config_file)  # noqa: F841
 
-    except ProjectReleaseError as exc:
-        raise SystemExit(str(exc)) from exc
+    except (ProjectReleaseError, SystemExit) as exc:
+        log_exception(exc, level=logging.CRITICAL)
+        return 1
 
     except (KeyboardInterrupt, EOFError) as exc:
         raise SystemExit("Cancelled by user") from exc

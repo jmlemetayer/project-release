@@ -4,10 +4,6 @@ from pathlib import Path
 from typing import List
 from typing import Union
 
-from pydantic import ValidationError
-from yaml import MarkedYAMLError
-from yaml import YAMLError
-
 
 class ProjectReleaseError(Exception):
     """The project base exception."""
@@ -25,32 +21,22 @@ class ProjectReleaseError(Exception):
 class InvalidUtf8FileError(ProjectReleaseError):
     """The specified file is invalid."""
 
-    def __init__(self, exc: Exception) -> None:
-        super().__init__(f"Invalid UTF-8 file: {exc}")
+    def __init__(self) -> None:
+        super().__init__("Invalid UTF-8 file")
 
 
 class InvalidYamlFileError(ProjectReleaseError):
     """The specified YAML file is invalid."""
 
-    def __init__(self, exc: YAMLError) -> None:
-        lines: List[str] = []
-        if isinstance(exc, MarkedYAMLError):
-            if exc.problem_mark:
-                mark = exc.problem_mark
-                lines.append(f"at line {mark.line + 1}, column {mark.column + 1}")
-            if exc.context:
-                lines.append(str(exc.context))
-            if exc.problem:
-                lines.append(str(exc.problem))
-        desc = "syntax error " + ", ".join(lines) if lines else str(exc)
-        super().__init__(f"Invalid YAML file: {desc}")
+    def __init__(self) -> None:
+        super().__init__("Invalid YAML file")
 
 
 class InvalidConfigFileError(ProjectReleaseError):
     """The specified configuration file is invalid."""
 
-    def __init__(self, exc: ValidationError) -> None:
-        super().__init__(f"Invalid configuration file: {exc}")
+    def __init__(self) -> None:
+        super().__init__("Invalid configuration file")
 
 
 class VersionNotFoundError(ProjectReleaseError):

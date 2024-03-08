@@ -70,13 +70,13 @@ def parse_config(config_file: Path) -> Config:
         config = Config()
 
     except (OSError, UnicodeError) as exc:
-        raise InvalidUtf8FileError(exc) from exc
+        raise InvalidUtf8FileError() from exc
 
     except yaml.YAMLError as exc:
-        raise InvalidYamlFileError(exc) from exc
+        raise InvalidYamlFileError() from exc
 
     except ValidationError as exc:
-        raise InvalidConfigFileError(exc) from exc
+        raise InvalidConfigFileError() from exc
 
     logger.debug(f"parsed config: {config}")
     return config
