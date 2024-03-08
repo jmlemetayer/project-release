@@ -18,6 +18,7 @@ from .error import InvalidUtf8FileError
 from .error import InvalidYamlFileError
 from .file import FileConfig
 from .git import GitConfig
+from .utils import relative_path
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ def parse_config(config_file: Path) -> Config:
         If the configuration file is invalid or not found.
     """
     try:
-        logger.debug(f"parsing config file: {config_file}")
+        logger.debug(f"parsing config file: {relative_path(config_file)}")
 
         with open(config_file, encoding="utf-8") as stream:
             data = yaml.safe_load(stream) or {}
@@ -64,19 +65,19 @@ def parse_config(config_file: Path) -> Config:
         config = _parse_config(data)
 
     except FileNotFoundError:
-        logger.warning(f"Configuration file not found: {config_file}")
+        logger.warning(f"Configuration file not found: {relative_path(config_file)}")
         logger.info("Please use --sample-config to generate one")
         logger.info("Using the default configuration")
         config = Config()
 
     except (OSError, UnicodeError) as exc:
-        raise InvalidUtf8FileError() from exc
+        raise InvalidUtf8FileError(config_file) from exc
 
     except yaml.YAMLError as exc:
-        raise InvalidYamlFileError() from exc
+        raise InvalidYamlFileError(config_file) from exc
 
     except ValidationError as exc:
-        raise InvalidConfigFileError() from exc
+        raise InvalidConfigFileError(config_file) from exc
 
     logger.debug(f"parsed config: {config}")
     return config
