@@ -1,4 +1,5 @@
 """Text-based user interface (TUI) related code."""
+
 import fnmatch
 import logging
 from typing import Callable

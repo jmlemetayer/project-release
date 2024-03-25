@@ -6,6 +6,7 @@ Notes
 
 .. _Sphinx configuration: https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
+
 import os
 import sys
 
