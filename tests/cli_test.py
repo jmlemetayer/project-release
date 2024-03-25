@@ -1,4 +1,5 @@
 """Test cases for the CLI."""
+
 import pytest
 
 from project_release import __version__
