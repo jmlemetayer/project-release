@@ -1,4 +1,5 @@
 """Test cases for the CLI."""
+
 import logging
 from pathlib import Path
 
