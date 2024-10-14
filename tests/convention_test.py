@@ -1,4 +1,5 @@
 """Test cases for the convention module."""
+
 import logging
 
 from project_release.convention import AcceptAllValidator
