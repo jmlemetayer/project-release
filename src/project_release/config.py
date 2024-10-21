@@ -1,4 +1,5 @@
 """Config related code."""
+
 import logging
 import os
 import sys
