@@ -1,4 +1,5 @@
 """The command line module."""
+
 import argparse
 import logging
 import pathlib

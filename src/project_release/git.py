@@ -1,4 +1,5 @@
 """Git related code."""
+
 import enum
 import logging
 from typing import List
